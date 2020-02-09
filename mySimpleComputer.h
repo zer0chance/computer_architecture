@@ -171,7 +171,7 @@ int sc_regGet(int reg, int* value)
 
 int sc_commandEncode(int command_num, int operand, int* value) // TODO: handle exeptions
 {
-    *value = (COMMAND & (command_num << 7)) & operand;
+    *value = (COMMAND & (command_num << 7)) | operand;
     return EXIT_SUCCESS;
 }
 
