@@ -51,7 +51,16 @@ int main()
 	print_memory();
 	print_flags();
 
-	printf("\n\nValue of &10: %d\n\n", value);
+	printf("\n\nValue of &10: %d", value);
+
+	sc_commandEncode(11, 5, &value);
+	printf("\n\nEncoding WRITE (11) content of memory adress #5: %d", value);
+
+	int command_num;
+	int operand;
+	sc_commandDecode(value, &command_num, &operand);
+	printf("\n\nDecoding WRITE (11) content of memory adress #5: %d %d\n\n", command_num, operand);
+
 
     return EXIT_SUCCESS;       
 }	
