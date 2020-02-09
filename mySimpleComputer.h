@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #define RAM_MAX_SIZE 100
-#define COMMAND 0xbfff      // 1 0 1111111 1111111
+#define COMMAND 0x8000      // 1 0 0000000 0000000
 #define COMMAND_NUM 0x3f80  //     1111111 0000000 
 #define OPERAND 0x7f        //             1111111
 
@@ -171,14 +171,14 @@ int sc_regGet(int reg, int* value)
 
 int sc_commandEncode(int command_num, int operand, int* value) // TODO: handle exeptions
 {
-    *value = (COMMAND & (command_num << 7)) | operand;
+    *value = (COMMAND | (command_num << 7)) | operand;
     return EXIT_SUCCESS;
 }
 
 
 int sc_commandDecode(int value, int* command_num, int* operand) // TODO: handle exeptions
 {
-    *command_num = value & COMMAND_NUM;
+    *command_num = (value & COMMAND_NUM) >> 7;
     *operand = value & OPERAND;
     return EXIT_SUCCESS;
 }
