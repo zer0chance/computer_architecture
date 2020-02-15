@@ -12,11 +12,11 @@ int16_t RAM[RAM_MAX_SIZE];
 
 enum
 {
-    WRONG_OPCODE = 0x1,	
-    CLOCK_IGNORE = 0x2,	
+    WRONG_OPCODE     = 0x1,	
+    CLOCK_IGNORE     = 0x2,	
     MEM_OUT_OF_BOUND = 0x4,
-    ZERO_DIVISION = 0x8,
-    OP_OVERFLOW = 0x10
+    ZERO_DIVISION    = 0x8,
+    OP_OVERFLOW      = 0x10
 };   
 
 
