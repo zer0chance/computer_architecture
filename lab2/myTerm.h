@@ -36,14 +36,6 @@ int mt_clrscr(void)
     return EXIT_SUCCESS; 
 }
 
-
-int mt_gotoXY(int x, int y)
-{
-    printf("\033[%d;%dH", x, y);
-    return EXIT_SUCCESS; 
-} 
-
-
 int mt_getscreensize(int* rows, int* cols)
 {
     struct winsize ws;
@@ -57,6 +49,20 @@ int mt_getscreensize(int* rows, int* cols)
     else 
         return EXIT_FAILURE;
 }
+
+
+int mt_gotoXY(int x, int y)
+{
+    int row, col;
+    mt_getscreensize(&row, &col);
+    if (x <= row && y <= col)
+    { 
+       printf("\033[%d;%dH", x, y);
+       return EXIT_SUCCESS;
+    }
+    else
+       return EXIT_FAILURE; 
+} 
 
 
 int mt_setfgcolor(int color)
