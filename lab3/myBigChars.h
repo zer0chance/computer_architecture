@@ -49,9 +49,9 @@ int bc_box(int x1, int y1, int x2, int y2)
             for (int i = 1; i < y2 - 1; i++)
             {
                 printf("\033[%d;%dH│", ++x1, y1);
-                for (int i = 1; i < x2 - 1; i ++)
-                    printf(" ");
-                printf("│");    
+                // for (int i = 1; i < x2 - 1; i ++)
+                //     printf(" ");
+                printf("\033[%d;%dH│", x1, y1 + x2 - 1);    
             }
             printf("\033[%d;%dH└", ++x1, y1);
             for (int i = 1; i < x2 - 1; i ++)
