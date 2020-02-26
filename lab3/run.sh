@@ -1,3 +1,3 @@
 clear
-gcc main.c
+gcc main.c -std=c99
 ./a.out

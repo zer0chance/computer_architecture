@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 enum
 {
@@ -166,13 +168,19 @@ int bc_getbigcharpos(int bc[2], int x, int y, int *value)
 }
 
 
-int bc_bigcharwrite(int fd, int* big, int count)
+int bc_bigcharwrite(int fd, int bc[2], int count)
 {
-    //TODO
+    int result = write(fd, (int*)bc, count); 
+    printf("\nWritten: %d chars\n", result); 
+
+    return EXIT_SUCCESS;    
 }
 
 
-int bc_bigcharread(int fd, int* big,int need_count, int* count)
+int bc_bigcharread(int fd, int bc[2], int* count)
 {
-    //TODO
+    *count = read(fd, (int*)bc, 2); 
+    printf("\nWritten: %d chars\n", *count); 
+
+    return EXIT_SUCCESS; 
 }

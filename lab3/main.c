@@ -21,7 +21,7 @@ int main()
     int char1[2] = {n1, n2};
     bc_printbigchar(char1, 10, 10, 36, 43);
 
-    // int char2[2] = {0, 0};
+    int char2[2];
     bc_setbigcharpos(char1, 1, 1, 0);
     bc_setbigcharpos(char1, 1, 8, 0);
     bc_setbigcharpos(char1, 8, 8, 0);
@@ -35,6 +35,22 @@ int main()
     int value;
     bc_getbigcharpos(char1, 1, 2, &value);
     printf("\n (1; 2) = %d \n\n", value);
+    
+    int fd = open("bigChars", O_WRONLY);
+    if (fd == -1)
+    {
+        printf("\n Can`t open file\n");
+    }
+    else 
+    {
+        bc_bigcharwrite(fd, char1, 2);
+    }
+    close(fd);
 
+    int readed_chars;
+    fd = open("bigChars", O_RDONLY);
+    bc_bigcharread(fd, char2, &readed_chars);
+    printf("\nChars readed: %d \nFirst: %d Second: %d \n", readed_chars, char2[0], char2[1]); 
+    close(fd);
     return 0;
 }
