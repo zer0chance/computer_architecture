@@ -38,11 +38,12 @@ int bc_zero[2] = {4286677377, 2172748287};
 
 void print_ic_content()
 {
-    bc_printbigchar(bc_plus, 17, 3, 0, 0);
-    bc_printbigchar(bc_chars[4], 17, 12, 0, 0);
-    bc_printbigchar(bc_chars[2], 17, 21, 0, 0);
-    bc_printbigchar(bc_chars[5], 17, 30, 0, 0);
-    bc_printbigchar(bc_chars[9], 17, 39, 0, 0);
+    int x = 3;
+    bc_printbigchar(bc_plus, 17, x, 0, 0);
+    bc_printbigchar(bc_chars[RAM[IC] / 1000], 17, 12, 0, 0);
+    bc_printbigchar(bc_chars[(RAM[IC] % 1000) / 100], 17, 21, 0, 0);
+    bc_printbigchar(bc_chars[(RAM[IC] % 100) / 10], 17, 30, 0, 0);
+    bc_printbigchar(bc_chars[RAM[IC] % 10], 17, 39, 0, 0);
 }
 
 
@@ -140,6 +141,7 @@ int main()
     // mt_gotoXY(10, 11);
     // printf("Memory");
 
+    sc_memorySet(0, 3245);
     sc_regSet(WRONG_OPCODE, 1);
     sc_regSet(CLOCK_IGNORE, 1);
     sc_regSet(OP_OVERFLOW, 1);
