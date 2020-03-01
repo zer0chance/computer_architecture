@@ -51,8 +51,6 @@ int bc_box(int x1, int y1, int x2, int y2)
             for (int i = 1; i < y2 - 1; i++)
             {
                 printf("\033[%d;%dH│", ++x1, y1);
-                // for (int i = 1; i < x2 - 1; i ++)
-                //     printf(" ");
                 printf("\033[%d;%dH│", x1, y1 + x2 - 1);    
             }
             printf("\033[%d;%dH└", ++x1, y1);
@@ -168,7 +166,7 @@ int bc_getbigcharpos(int bc[2], int x, int y, int *value)
 }
 
 
-int bc_bigcharwrite(int fd, int bc[2], int count)
+int bc_bigcharwrite(int fd, int bc[2], int count) //TODO: Reimplement it with fwrite
 {
     int result = write(fd, (int*)bc, count); 
     printf("\nWritten: %d chars\n", result); 
@@ -177,10 +175,9 @@ int bc_bigcharwrite(int fd, int bc[2], int count)
 }
 
 
-int bc_bigcharread(int fd, int bc[2], int* count)
+int bc_bigcharread(int fd, int bc[2], int* count) //TODO: Reimplement it with fread
 {
     *count = read(fd, (int*)bc, 2); 
-    printf("\nWritten: %d chars\n", *count); 
 
     return EXIT_SUCCESS; 
 }

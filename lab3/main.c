@@ -52,5 +52,8 @@ int main()
     bc_bigcharread(fd, char2, &readed_chars);
     printf("\nChars readed: %d \nFirst: %d Second: %d \n", readed_chars, char2[0], char2[1]); 
     close(fd);
+
+    bc_printbigchar(char2, 20, 30, 36, 43);
+    printf("\nCHEK!\n");
     return 0;
 }
