@@ -4,30 +4,31 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-enum
-{
-    FG_BLACK   = 30,
-    FG_RED     = 31, 
-    FG_GREEN   = 32,
-    FG_YELLOW  = 33, 
-    FG_BLUE    = 34, 
-    FG_MAGENTA = 35, 
-    FG_CYAN    = 36, 
-    FG_WHITE   = 37
-};
+// enum
+// {
+//     FG_BLACK   = 30,
+//     FG_RED     = 31, 
+//     FG_GREEN   = 32,
+//     FG_YELLOW  = 33, 
+//     FG_BLUE    = 34, 
+//     FG_MAGENTA = 35, 
+//     FG_CYAN    = 36, 
+//     FG_WHITE   = 37
+// };
 
 
-enum
-{
-    BG_BLACK   = 40,
-    BG_RED     = 41, 
-    BG_GREEN   = 42,
-    BG_YELLOW  = 43, 
-    BG_BLUE    = 44, 
-    BG_MAGENTA = 45, 
-    BG_CYAN    = 46, 
-    BG_WHITE   = 47
-};
+// enum
+// {
+//     BG_BLACK   = 40,
+//     BG_RED     = 41, 
+//     BG_GREEN   = 42,
+//     BG_YELLOW  = 43, 
+//     BG_BLUE    = 44, 
+//     BG_MAGENTA = 45, 
+//     BG_CYAN    = 46, 
+//     BG_WHITE   = 47
+// };
+
 
 int bc_printA(char* str)
 {
@@ -74,7 +75,11 @@ int bc_printbigchar(int bc[2], int x, int y, int fgcolor, int bgcolor)
     {
         if (x <= ws.ws_row - 8 && y <= ws.ws_col - 8)
         { 
-            if (fgcolor >= 30 && fgcolor < 38 && bgcolor >= 40 && bgcolor < 48)
+            if (fgcolor == 0 || bgcolor == 0)
+            {
+                printf("\033[%d;%dH\033(0", x, y);                
+            }
+            else if (fgcolor >= 30 && fgcolor < 38 && bgcolor >= 40 && bgcolor < 48)
             {
                 printf("\033[%d;%dH\033(0\033[%d;%dm", x, y, fgcolor, bgcolor);
             }
