@@ -1,14 +1,5 @@
 #include "myBigChars.h"
 
-// 11111111
-// 00000011
-// 00000011
-// 00000011
-// 11111111
-// 11000000
-// 11000000
-// 11111111
-
 
 int main()
 {
@@ -31,7 +22,6 @@ int main()
     bc_setbigcharpos(char1, 6, 4, 1);
     bc_printbigchar(char1, 20, 10, 36, 43);
 
-    //printf("\n%d\n", (n1 >> 14) );
     printf("\033[50;1H");
     int value;
     bc_getbigcharpos(char1, 1, 2, &value);

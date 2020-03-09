@@ -1,45 +1,14 @@
+#include "share.h"
 #include "myReadkey.h"
 #include "myBigChars.h"
 #include "myTerm.h"
 #include "mySimpleComputer.h"
 
-// f5 - ^[[15~
-// f6 - ^[[17~
-
-// 11111111
-// 11000011
-// 11000011
-// 11111111
-// 00000011
-// 00000110
-// 00001100
-// 00011000
-
-int bc_chars[12][2] =
-{
-    {4286677377, 2172748287},  // 0
-    {253704039, 117901063},    // 1
-    {4278387459, 4290822399},  // 2
-    {4278387711, 50529279},    // 3
-    {3284386755, 4278387459},  // 4
-    {4290822399, 50529279},    // 5
-    {4290822399, 3284386815},  // 6
-    {4278387462, 202116108},   // 7
-    {4286677503, 2172748287},  // 8
-    {4291019775, 50727960},    // 9
-    {404232447, 4279769112},   // +
-    {255, 4278190080}          // -
-};
-
-int bc_plus[2] = {404232447, 4279769112};
-int bc_minus[2] = {255, 4278190080};
-int bc_zero[2] = {4286677377, 2172748287};
-
 
 void print_ic_content()
 {
     int x = 3;
-    bc_printbigchar(bc_plus, 17, x, 0, 0);
+    bc_printbigchar(bc_chars[10], 17, x, 0, 0);
     bc_printbigchar(bc_chars[RAM[IC] / 1000], 17, 12, 0, 0);
     bc_printbigchar(bc_chars[(RAM[IC] % 1000) / 100], 17, 21, 0, 0);
     bc_printbigchar(bc_chars[(RAM[IC] % 100) / 10], 17, 30, 0, 0);
@@ -85,7 +54,6 @@ void print_term()
         {
             printf("+%-4d ", RAM[k++]);
         }
-        //printf("\n");
     }
 
     bc_box(4, 65, 20, 3);
@@ -133,14 +101,6 @@ void print_term()
 
 int main()
 {
-    // int key;
-    // rk_readkey(&key);
-    // printf("\n\nReaded: %d \n\n", key);
-
-    // bc_box(10, 5, 20, 10);
-    // mt_gotoXY(10, 11);
-    // printf("Memory");
-
     sc_memorySet(IC, 3245);
     IC = 44;
     sc_memorySet(IC, 23);
@@ -152,5 +112,6 @@ int main()
     print_term();
 
     mt_gotoXY(40, 1);
+
     return 0;
 }
