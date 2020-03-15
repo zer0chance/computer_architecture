@@ -7,6 +7,10 @@
 #define ON 1
 #define OFF 0
 
+#define F5 53
+#define F6 55
+
+
 struct termios term_state;
 
 

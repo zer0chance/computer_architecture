@@ -3,8 +3,11 @@
 #include "myBigChars.h"
 #include "myTerm.h"
 #include "mySimpleComputer.h"
+#include <stdio_ext.h>
 
-
+int input_x = 27;
+int input_y = 3;
+ 
 void print_ic_content()
 {
     if(RAM[IC] & TWO_POW_FIFTEEN)
@@ -82,17 +85,20 @@ void print_memory()
 
 void print_term()
 {
+    //mt_clrscr();
     print_memory();
 
     bc_box(4, 65, 20, 3);
     mt_gotoXY(4, 69);
     printf("accumulator");
+    mt_gotoXY(5, 72);
+    printf("%d", Accumulator);
 
     bc_box(7, 65, 20, 3);
     mt_gotoXY(7, 66);
     printf("instructionCounter");
     mt_gotoXY(8, 72);
-    printf("+%-4d", IC);
+    printf("%d", IC);
 
     bc_box(10, 65, 20, 3);
     mt_gotoXY(10, 70);
@@ -124,20 +130,94 @@ void print_term()
     printf("F5 - accumulator");
     mt_gotoXY(23, 51);
     printf("F6 - inctructionCounter");
+
+    mt_gotoXY(26, 3); 
+    printf("Input/Output:");
+    mt_gotoXY(input_x, input_y);
 }
 
 
 int main()
 {
+    rk_mytermsave();
+    rk_mytermregime(OFF, 0, 1, OFF, OFF);
+
     sc_memorySet(IC, 34181);
-
-    sc_regSet(WRONG_OPCODE, 1);
     sc_regSet(CLOCK_IGNORE, 1);
-    sc_regSet(OP_OVERFLOW, 1);
 
-    print_term();
+    int new_ic;
+    char ch, garbage;
+    for(;;)
+    {
+        print_term();
+        fflush(stdout);
+        read(0, &ch, 1);
 
-    mt_gotoXY(40, 1);       
+
+        if (ch == 27)
+        {
+            read(0, &ch, 1);
+            read(0, &ch, 1);
+            read(0, &ch, 1);
+            //read(0, &garbage, 10); // to read one extra byte of fn button
+            __fpurge(stdin);
+            // if(mt_gotoXY(input_x, input_y)) printf("Failed to move to io!\n\n");
+            // if(rk_mytermrestore()) printf("Failed to restore terminal state!\n\n");
+            switch (ch)
+            {
+            case 53:    // F5
+                mt_gotoXY(input_x++, input_y);
+                rk_mytermrestore();
+                printf("Accumulator value: ");
+                fflush(stdout);
+                scanf("%d", &Accumulator);
+                break;
+            case 55:    // F6
+                mt_gotoXY(input_x++, input_y);
+                rk_mytermrestore();
+                printf("IC value: ");
+                fflush(stdout);
+                scanf("%d", &new_ic);
+
+                if((new_ic >= 0) && (new_ic < 100))
+                    IC = new_ic;
+                else
+                {
+                    printf("  Invalid value! %d", ch);
+                    input_x++;
+                }
+                    
+                fflush(stdout);
+                break;
+            default:
+                printf(" Invalid button fn %c!", ch);    
+            }
+            rk_mytermregime(OFF, 0, 1, OFF, OFF);
+        }
+
+        if(ch == 's')
+        {
+            char filename[20];
+            if(mt_gotoXY(input_x++, input_y)) printf("Failed to move to io!\n\n");
+            if(rk_mytermrestore()) printf("Failed to restore terminal state!\n\n");
+            printf("Filename: ");
+            fflush(stdout);
+
+            read(0, filename, 20);
+            printf("\nget: %s\n\n", filename);
+            rk_mytermregime(OFF, 0, 1, OFF, OFF);
+        }
+        
+        if(ch == 'q') break;
+
+        fflush(stdout);
+    }
+
+
+    if(rk_mytermrestore()) printf("Failed to restore terminal state!\n\n");
+
+    mt_gotoXY(40, 1);     
 
     return 0;
 }
+
