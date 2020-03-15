@@ -100,7 +100,6 @@ void print_memory()
 
 void print_term()
 {
-    //mt_clrscr();
     print_memory();
 
     bc_box(4, 65, 20, 3);
@@ -152,17 +151,24 @@ void print_term()
 }
 
 
+void restore_term(void)
+{
+    if(rk_mytermrestore()) printf("Failed to restore terminal state!\n\n");
+}
+
+
 int main()
 {
     mt_clrscr();
     rk_mytermsave();
     rk_mytermregime(OFF, 0, 1, OFF, OFF);
+    atexit(restore_term);
 
     sc_memorySet(IC, 34181);
     sc_regSet(CLOCK_IGNORE, 1);
 
     int new_ic;
-    char ch, garbage;
+    char ch;
     for(;;)
     {
         print_term();
@@ -178,7 +184,6 @@ int main()
             read(0, &ch, 1);
             __fpurge(stdin);
 
-            
             switch (ch)
             {
             case 53:    // F5
@@ -287,9 +292,6 @@ int main()
 
         fflush(stdout);
     }
-
-
-    if(rk_mytermrestore()) printf("Failed to restore terminal state!\n\n");
 
     mt_gotoXY(40, 1);     
 
