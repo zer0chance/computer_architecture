@@ -7,12 +7,18 @@
 
 void print_ic_content()
 {
-    int x = 3;
-    bc_printbigchar(bc_chars[10], 17, x, 0, 0);
-    bc_printbigchar(bc_chars[RAM[IC] / 1000], 17, 12, 0, 0);
-    bc_printbigchar(bc_chars[(RAM[IC] % 1000) / 100], 17, 21, 0, 0);
-    bc_printbigchar(bc_chars[(RAM[IC] % 100) / 10], 17, 30, 0, 0);
-    bc_printbigchar(bc_chars[RAM[IC] % 10], 17, 39, 0, 0);
+    if(RAM[IC] & TWO_POW_FIFTEEN)
+        bc_printbigchar(bc_chars[MINUS], 17, 3, 0, 0);
+    else
+        bc_printbigchar(bc_chars[PLUS], 17, 3, 0, 0);
+
+    int comand_num, operand;  
+    sc_commandDecode(RAM[IC], &comand_num, &operand);
+
+    bc_printbigchar(bc_chars[(comand_num >> 4) & 7], 17, 12, 0, 0);
+    bc_printbigchar(bc_chars[comand_num & 15], 17, 21, 0, 0);
+    bc_printbigchar(bc_chars[(operand >> 4) & 7], 17, 30, 0, 0);
+    bc_printbigchar(bc_chars[operand & 15], 17, 39, 0, 0);
 }
 
 
@@ -42,19 +48,41 @@ void print_flags()
 }
 
 
-void print_term()
+void print_memory()
 {
     bc_box(4, 2, 62, 12);
     mt_gotoXY(4, 29);
     printf("Memory");
+    int comand_num, operand;
     for (int i = 0, k = 0, x = 5, y = 3; i < 9; i++)
     {
         mt_gotoXY(x++, y);
-        for (int j = 0; j < 10; j++)
-        {
-            printf("+%-4d ", RAM[k++]);
+        for (int j = 0; j < 10; j++, k++)
+        {  
+            if(RAM[k] & 16384)
+                printf("-");
+            else
+                printf("+");
+                
+            sc_commandDecode(RAM[k], &comand_num, &operand);
+
+            if(comand_num > 15)
+                printf("%X", comand_num);
+            else 
+                printf("0%X", comand_num); 
+
+            if(operand > 15)
+                printf("%X ", operand);
+            else 
+                printf("0%X ", operand);       
         }
     }
+}
+
+
+void print_term()
+{
+    print_memory();
 
     bc_box(4, 65, 20, 3);
     mt_gotoXY(4, 69);
@@ -101,9 +129,7 @@ void print_term()
 
 int main()
 {
-    sc_memorySet(IC, 3245);
-    IC = 44;
-    sc_memorySet(IC, 23);
+    sc_memorySet(IC, 34181);
 
     sc_regSet(WRONG_OPCODE, 1);
     sc_regSet(CLOCK_IGNORE, 1);
