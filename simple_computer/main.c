@@ -154,6 +154,7 @@ void print_term()
 
 int main()
 {
+    mt_clrscr();
     rk_mytermsave();
     rk_mytermregime(OFF, 0, 1, OFF, OFF);
 
@@ -248,7 +249,7 @@ int main()
             char filename[20];
             if(mt_gotoXY(input_x++, input_y)) printf("Failed to move to io!\n\n");
             if(rk_mytermrestore()) printf("Failed to restore terminal state!\n\n");
-            printf("Filename: ");
+            printf("Save to file: ");
             fflush(stdout);
 
             scanf("%s", filename);
@@ -263,11 +264,23 @@ int main()
             char filename[20];
             mt_gotoXY(input_x++, input_y);
             rk_mytermrestore();
-            printf("Filename: ");
+            printf("Load file: ");
             fflush(stdout);
 
             scanf("%s", filename);
             sc_memoryLoad(filename);
+            rk_mytermregime(OFF, 0, 1, OFF, OFF);
+            continue;
+        }
+
+        if(ch == 'c')
+        {
+            mt_gotoXY(input_x++, input_y);
+            rk_mytermrestore();
+            printf("Change to: ");
+            fflush(stdout);
+
+            scanf("%hd", &(RAM[selected_pos]));
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
             continue;
         }
