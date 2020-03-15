@@ -41,7 +41,7 @@ int mt_gotoXY(int x, int y)
 
 int mt_setfgcolor(int color)
 {
-    if (color >= 30 && color < 38)
+    if ((color >= 30 && color < 38) || color == 0)
     {
         printf("\033[%dm", color);
         return EXIT_SUCCESS;
@@ -53,7 +53,7 @@ int mt_setfgcolor(int color)
 
 int mt_setbgcolor(int color)
 {
-    if (color >= 40 && color < 48)
+    if ((color >= 40 && color < 48) || color == 0)
     {
         printf("\033[%dm", color);
         return EXIT_SUCCESS;

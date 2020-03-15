@@ -7,16 +7,21 @@
 
 int input_x = 27;
 int input_y = 3;
+
+int mpos_x = 5;
+int mpos_y = 3;
+
+int selected_pos = 0;
  
-void print_ic_content()
+void print_selected()
 {
-    if(RAM[IC] & TWO_POW_FIFTEEN)
+    if(RAM[selected_pos] & TWO_POW_FIFTEEN)
         bc_printbigchar(bc_chars[MINUS], 17, 3, 0, 0);
     else
         bc_printbigchar(bc_chars[PLUS], 17, 3, 0, 0);
 
     int comand_num, operand;  
-    sc_commandDecode(RAM[IC], &comand_num, &operand);
+    sc_commandDecode(RAM[selected_pos], &comand_num, &operand);
 
     bc_printbigchar(bc_chars[(comand_num >> 4) & 7], 17, 12, 0, 0);
     bc_printbigchar(bc_chars[comand_num & 15], 17, 21, 0, 0);
@@ -57,11 +62,17 @@ void print_memory()
     mt_gotoXY(4, 29);
     printf("Memory");
     int comand_num, operand;
-    for (int i = 0, k = 0, x = 5, y = 3; i < 9; i++)
+    for (int i = 0, k = 0, x = 5; i < 10; i++, x++)
     {
-        mt_gotoXY(x++, y);
-        for (int j = 0; j < 10; j++, k++)
-        {  
+        mt_gotoXY(x, 3);
+        for (int j = 0,  y = 3; j < 10; j++, k++)
+        {
+            if (mpos_x == x && mpos_y == y)
+            {
+                mt_setbgcolor(BG_BLUE);
+                selected_pos = 10 * i + j;
+            }
+
             if(RAM[k] & 16384)
                 printf("-");
             else
@@ -75,9 +86,13 @@ void print_memory()
                 printf("0%X", comand_num); 
 
             if(operand > 15)
-                printf("%X ", operand);
+                printf("%X", operand);
             else 
-                printf("0%X ", operand);       
+                printf("0%X", operand);
+
+            mt_setbgcolor(0);
+            y += 6;   
+            mt_gotoXY(x, y);       
         }
     }
 }
@@ -110,7 +125,7 @@ void print_term()
     print_flags(); 
 
     bc_box(16, 2, 47, 10);
-    print_ic_content();
+    print_selected();
 
     bc_box(16, 50, 35, 10);
     mt_gotoXY(16, 52);
@@ -153,16 +168,16 @@ int main()
         fflush(stdout);
         read(0, &ch, 1);
 
+        if(ch == 'q') break;
 
         if (ch == 27)
         {
             read(0, &ch, 1);
             read(0, &ch, 1);
             read(0, &ch, 1);
-            //read(0, &garbage, 10); // to read one extra byte of fn button
             __fpurge(stdin);
-            // if(mt_gotoXY(input_x, input_y)) printf("Failed to move to io!\n\n");
-            // if(rk_mytermrestore()) printf("Failed to restore terminal state!\n\n");
+
+            
             switch (ch)
             {
             case 53:    // F5
@@ -193,6 +208,39 @@ int main()
                 printf(" Invalid button fn %c!", ch);    
             }
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
+            continue;
+        }
+
+        if(ch == 'k')
+        {
+            if (mpos_y < 57)
+                mpos_y += 6;
+
+            continue;    
+        }
+
+        if(ch == 'g')
+        {
+            if (mpos_y > 3)
+                mpos_y -= 6;
+
+            continue;    
+        }
+
+        if(ch == 'h')
+        {
+            if (mpos_x < 14)
+                mpos_x++;
+
+            continue;    
+        }
+
+        if(ch == 'j')
+        {
+            if (mpos_x > 5)
+                mpos_x--;
+
+            continue;    
         }
 
         if(ch == 's')
@@ -203,12 +251,26 @@ int main()
             printf("Filename: ");
             fflush(stdout);
 
-            read(0, filename, 20);
-            printf("\nget: %s\n\n", filename);
+            scanf("%s", filename);
+            sc_memorySave(filename);
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
+            continue;
         }
-        
-        if(ch == 'q') break;
+
+
+        if(ch == 'l')
+        {
+            char filename[20];
+            mt_gotoXY(input_x++, input_y);
+            rk_mytermrestore();
+            printf("Filename: ");
+            fflush(stdout);
+
+            scanf("%s", filename);
+            sc_memoryLoad(filename);
+            rk_mytermregime(OFF, 0, 1, OFF, OFF);
+            continue;
+        }
 
         fflush(stdout);
     }
