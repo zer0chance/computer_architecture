@@ -111,7 +111,7 @@ int main()
 
     print_term();
 
-    mt_gotoXY(40, 1);
+    mt_gotoXY(40, 1);       
 
     return 0;
 }
