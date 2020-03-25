@@ -4,6 +4,8 @@
 #include "myTerm.h"
 #include "mySimpleComputer.h"
 #include <stdio_ext.h>
+#include <signal.h>
+#include <sys/time.h>
 
 int input_x = 27;
 int input_y = 3;
@@ -157,6 +159,12 @@ void restore_term(void)
 }
 
 
+void signalhandler (int signo)
+{
+    IC++;
+}
+
+
 int main()
 {
     mt_clrscr();
@@ -164,13 +172,23 @@ int main()
     rk_mytermregime(OFF, 0, 1, OFF, OFF);
     atexit(restore_term);
 
-    sc_memorySet(IC, 34181);
-    sc_regSet(CLOCK_IGNORE, 1);
+    struct itimerval nval, oval;
+    signal (SIGALRM, signalhandler);
+    
+    nval.it_interval.tv_sec = 1;
+    nval.it_interval.tv_usec = 0;
+    nval.it_value.tv_sec = 1;
+    nval.it_value.tv_usec = 0;
+    
+    setitimer (ITIMER_REAL, &nval, &oval);
 
     int new_ic;
     char ch;
+    int clock_flag;
     for(;;)
     {
+        sc_regSet(CLOCK_IGNORE, 0);
+        // sc_regGet(CLOCK_IGNORE, &clock_flag);
         print_term();
         fflush(stdout);
         read(0, &ch, 1);
@@ -179,6 +197,10 @@ int main()
 
         if (ch == 27)
         {
+            // sc_regSet(CLOCK_IGNORE, 1);
+            // print_term();
+            // signal (SIGALRM, SIG_DFL);
+
             read(0, &ch, 1);
             read(0, &ch, 1);
             read(0, &ch, 1);
