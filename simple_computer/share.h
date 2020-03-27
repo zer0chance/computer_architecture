@@ -1,3 +1,7 @@
+#include <stdio_ext.h>
+#include <signal.h>
+#include <sys/time.h>
+
 #define TWO_POW_FIFTEEN 16384
 
 enum
