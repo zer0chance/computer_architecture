@@ -39,22 +39,32 @@ void print_flags()
     sc_regGet(WRONG_OPCODE, &value);
     if (value)
         printf("W ");
+    else
+        printf("  ");    
 
     sc_regGet(CLOCK_IGNORE, &value);
     if (value)
         printf("C ");
+    else
+        printf("  ");     
 
     sc_regGet(MEM_OUT_OF_BOUND, &value);
     if (value)
         printf("M ");
+    else
+        printf("  ");     
 
     sc_regGet(ZERO_DIVISION, &value);
     if (value)
         printf("Z ");
+    else
+        printf("  ");     
 
     sc_regGet(OP_OVERFLOW, &value);
     if (value)
-        printf("O ");                
+        printf("O ");
+    else
+        printf("  ");                     
 }
 
 
@@ -108,11 +118,15 @@ void print_term()
     mt_gotoXY(4, 69);
     printf("accumulator");
     mt_gotoXY(5, 72);
+    printf("      ");
+    mt_gotoXY(5, 72);
     printf("%d", Accumulator);
 
     bc_box(7, 65, 20, 3);
     mt_gotoXY(7, 66);
     printf("instructionCounter");
+    mt_gotoXY(8, 72);
+    printf("      ");
     mt_gotoXY(8, 72);
     printf("%d", IC);
 
@@ -159,9 +173,18 @@ void restore_term(void)
 }
 
 
-void signalhandler (int signo)
+void signalhandler_reset (int signo)
+{
+    selected_pos = 0;
+    sc_regInit();
+    sc_memoryInit();
+}
+
+
+void signalhandler_timer (int signo)
 {
     IC++;
+    signal (SIGALRM, signalhandler_timer);
 }
 
 
@@ -173,7 +196,8 @@ int main()
     atexit(restore_term);
 
     struct itimerval nval, oval;
-    signal (SIGALRM, signalhandler);
+    signal (SIGALRM, signalhandler_timer);
+    signal (SIGUSR1, signalhandler_reset);
     
     nval.it_interval.tv_sec = 1;
     nval.it_interval.tv_usec = 0;
@@ -189,6 +213,7 @@ int main()
     {
         sc_regSet(CLOCK_IGNORE, 0);
         // sc_regGet(CLOCK_IGNORE, &clock_flag);
+        
         print_term();
         fflush(stdout);
         read(0, &ch, 1);
@@ -197,14 +222,15 @@ int main()
 
         if (ch == 27)
         {
-            // sc_regSet(CLOCK_IGNORE, 1);
-            // print_term();
-            // signal (SIGALRM, SIG_DFL);
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
 
             read(0, &ch, 1);
             read(0, &ch, 1);
             read(0, &ch, 1);
-            __fpurge(stdin);
+            __fpurge(stdin);    
 
             switch (ch)
             {
@@ -236,43 +262,70 @@ int main()
                 printf(" Invalid button fn %c!", ch);    
             }
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
-            continue;
+            setitimer (ITIMER_REAL, &nval, &oval);
+            signal (SIGALRM, signalhandler_timer);
         }
 
         if(ch == 'k')
         {
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
             if (mpos_y < 57)
                 mpos_y += 6;
 
-            continue;    
+            signal (SIGALRM, signalhandler_timer);
+            setitimer (ITIMER_REAL, &nval, &oval);
+    
         }
 
         if(ch == 'g')
         {
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
             if (mpos_y > 3)
                 mpos_y -= 6;
-
-            continue;    
+            signal (SIGALRM, signalhandler_timer);
+            setitimer (ITIMER_REAL, &nval, &oval);
+            sc_regSet(CLOCK_IGNORE, 0);
         }
 
         if(ch == 'h')
         {
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
             if (mpos_x < 14)
                 mpos_x++;
-
-            continue;    
+            signal (SIGALRM, signalhandler_timer);
+            setitimer (ITIMER_REAL, &nval, &oval);
+            sc_regSet(CLOCK_IGNORE, 0);
         }
 
         if(ch == 'j')
         {
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
             if (mpos_x > 5)
                 mpos_x--;
-
-            continue;    
+            signal (SIGALRM, signalhandler_timer);
+            setitimer (ITIMER_REAL, &nval, &oval);
+            sc_regSet(CLOCK_IGNORE, 0);
         }
 
         if(ch == 's')
         {
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
+
             char filename[20];
             if(mt_gotoXY(input_x++, input_y)) printf("Failed to move to io!\n\n");
             if(rk_mytermrestore()) printf("Failed to restore terminal state!\n\n");
@@ -282,12 +335,20 @@ int main()
             scanf("%s", filename);
             sc_memorySave(filename);
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
-            continue;
+            signal (SIGALRM, signalhandler_timer);
+            setitimer (ITIMER_REAL, &nval, &oval);
+
+       
         }
 
 
         if(ch == 'l')
         {
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
+
             char filename[20];
             mt_gotoXY(input_x++, input_y);
             rk_mytermrestore();
@@ -297,11 +358,19 @@ int main()
             scanf("%s", filename);
             sc_memoryLoad(filename);
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
-            continue;
+            signal (SIGALRM, signalhandler_timer);
+            setitimer (ITIMER_REAL, &nval, &oval);
+
+
         }
 
         if(ch == 'c')
         {
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
+
             mt_gotoXY(input_x++, input_y);
             rk_mytermrestore();
             printf("Change to: ");
@@ -309,9 +378,25 @@ int main()
 
             scanf("%hd", &(RAM[selected_pos]));
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
-            continue;
+            signal (SIGALRM, signalhandler_timer);
+            setitimer (ITIMER_REAL, &nval, &oval);
+
         }
 
+        if(ch == 'i')
+        {
+            signal (SIGALRM, SIG_IGN);
+            sc_regSet(CLOCK_IGNORE, 1);
+            print_term();
+            
+
+            raise(SIGUSR1);
+            signal (SIGALRM, signalhandler_timer);
+            setitimer (ITIMER_REAL, &nval, &oval);
+
+        }
+
+        ch = 0;
         fflush(stdout);
     }
 
