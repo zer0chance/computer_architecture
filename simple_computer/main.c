@@ -114,7 +114,7 @@ void clear_input()
     mt_gotoXY(input_x++, input_y);
     for (int i = 0; i < 11; i++) 
     {   
-        for (j = 0; j < 20; j++) printf("  ");
+        for (int j = 0; j < 20; j++) printf("  ");
         mt_gotoXY(input_x++, input_y);
     }    
     input_x = 27;
