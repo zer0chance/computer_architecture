@@ -3,16 +3,9 @@
 #include "myBigChars.h"
 #include "myTerm.h"
 #include "mySimpleComputer.h"
-
-
-int input_x = 27;
-int input_y = 3;
-
-int mpos_x = 5;
-int mpos_y = 3;
-
-int selected_pos = 0;
  
+struct itimerval nval, oval;
+
 void print_selected()
 {
     if(RAM[selected_pos] & TWO_POW_FIFTEEN)
@@ -197,12 +190,67 @@ void signalhandler_reset (int signo)
     signal(SIGUSR1, signalhandler_reset);
 }
 
+int CU();
 
 void signalhandler_timer (int signo)
 {
+    signal(SIGALRM, SIG_IGN);
+    CU();
+    signal(SIGALRM, signalhandler_timer);
+}
+
+
+int CU()
+{
+    int memory_val = RAM[IC] ;
+    int command_num, operand;    
+    nval.it_interval.tv_sec = 1;
+    nval.it_interval.tv_usec = 0;
+    nval.it_value.tv_sec = 1;
+    nval.it_value.tv_usec = 0;
+
+    sc_commandDecode(memory_val, &command_num, &operand);
+        
+    switch(command_num)
+    {
+        case 10: // READ
+            mt_gotoXY(input_x++, input_y);
+            rk_mytermrestore();
+            printf("New value of RAM[%d]: ", operand);
+            fflush(stdout);
+
+            scanf("%d", (RAM + operand));
+
+            rk_mytermregime(OFF, 0, 1, OFF, OFF);
+            break;
+
+        case 11: // WRITE
+            mt_gotoXY(input_x++, input_y);
+            printf("Value of RAM[%d]: ", operand);
+            fflush(stdout);
+
+            printf("%d", *(RAM + operand));
+            break;
+
+        case 20: // LOAD
+            Accumulator = *(RAM + operand);
+            break;
+
+
+        case 21: // STORE
+            *(RAM + operand) = Accumulator;
+            break;
+
+        default:
+            break;    
+    }
+
+    signal(SIGALRM, signalhandler_timer);
+    setitimer(ITIMER_REAL, &nval, &oval);
+
     if (IC == 99) IC = 0;
     else IC++;
-    signal(SIGALRM, signalhandler_timer);
+    return EXIT_SUCCESS;
 }
 
 
@@ -213,7 +261,12 @@ int main()
     rk_mytermregime(OFF, 0, 1, OFF, OFF);
     atexit(restore_term);
 
-    struct itimerval nval, oval;
+    //Presets
+    sc_commandEncode(10, 10, RAM);
+    sc_commandEncode(11, 10, (RAM + 1));
+    sc_commandEncode(20, 10, (RAM + 2));
+    sc_commandEncode(21, 11, (RAM + 3));
+         
     signal(SIGALRM, signalhandler_timer);
     signal(SIGUSR1, signalhandler_reset);
     
@@ -221,7 +274,7 @@ int main()
     nval.it_interval.tv_usec = 0;
     nval.it_value.tv_sec = 1;
     nval.it_value.tv_usec = 0;
-    
+
     setitimer(ITIMER_REAL, &nval, &oval);
 
     int new_ic;
@@ -384,7 +437,7 @@ int main()
             printf("Change to: ");
             fflush(stdout);
 
-            scanf("%hd", &(RAM[selected_pos]));
+            scanf("%d", &(RAM[selected_pos]));
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
             signal(SIGALRM, signalhandler_timer);
             setitimer(ITIMER_REAL, &nval, &oval);

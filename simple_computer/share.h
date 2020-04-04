@@ -4,6 +4,14 @@
 
 #define TWO_POW_FIFTEEN 16384
 
+int input_x = 27;
+int input_y = 3;
+
+int mpos_x = 5;
+int mpos_y = 3;
+
+int selected_pos = 0;
+
 enum
 {
     FG_BLACK   = 30,
