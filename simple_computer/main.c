@@ -208,6 +208,60 @@ void signalhandler_timer (int signo)
 }
 
 
+int ALU(int command_num, int operand)
+{
+    switch (command_num)
+    {
+        case 30: // ADD
+            if (VALID_MEM(operand))
+                Accumulator += RAM[operand];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;        
+        
+        case 31: // SUB 
+            if (VALID_MEM(operand))
+                Accumulator -= RAM[operand];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;        
+
+        case 32: // DIVIDE
+            if (VALID_MEM(operand))
+                Accumulator /= RAM[operand];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;        
+
+        case 33: // MUL
+            if (VALID_MEM(operand))
+                Accumulator *= RAM[operand];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;        
+               
+        case 52: // NOT
+            Accumulator = ~Accumulator;
+            break;        
+        
+        case 52: // AND
+            if (VALID_MEM(operand))
+                Accumulator &= RAM[operand];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;        
+
+        case 53: // OR
+            if (VALID_MEM(operand))
+                Accumulator |= RAM[operand];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;        
+
+        case 54: // XOR
+            if (VALID_MEM(operand))
+                Accumulator ^= RAM[operand];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;        
+    
+    return EXIT_SUCCESS;
+}
+
+
 int CU()
 {
     int memory_val = RAM[IC] ;
@@ -221,11 +275,11 @@ int CU()
 
     if (command_num >= 30 && command_num <= 33)
     {
-        //TODO ALU()
+        ALU(command_num, operand);
     }    
     else if (command_num >= 51 && command_num <= 54)
     {
-        //TODo ALU()
+        ALU(command_num, operand);
     }
     else switch(command_num)
     {
