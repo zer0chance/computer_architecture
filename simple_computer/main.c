@@ -4,6 +4,8 @@
 #include "myTerm.h"
 #include "mySimpleComputer.h"
  
+#define VALID_MEM(a) (a > 0) ? ((a < 100) ? 1 : 0) : 0
+
 struct itimerval nval, oval;
 
 void print_selected()
@@ -123,7 +125,7 @@ void print_term()
     printf("accumulator");
     mt_gotoXY(5, 72);
     printf("      ");
-    mt_gotoXY(5, 72);
+    mt_gotoXY(5, 73);
     printf("%d", Accumulator);
 
     bc_box(7, 65, 20, 3);
@@ -131,12 +133,18 @@ void print_term()
     printf("instructionCounter");
     mt_gotoXY(8, 72);
     printf("      ");
-    mt_gotoXY(8, 72);
+    mt_gotoXY(8, 73);
     printf("%d", IC);
 
     bc_box(10, 65, 20, 3);
     mt_gotoXY(10, 70);
     printf("Operation");
+    mt_gotoXY(11, 70);
+    if(RAM[IC] & TWO_POW_FIFTEEN)
+        printf("+");
+    else
+        printf("-");
+    printf("%d : %d", (RAM[IC] >> 7) & 127, RAM[IC] & 127);
 
     bc_box(13, 65, 20, 3);
     mt_gotoXY(13, 72);
@@ -210,36 +218,78 @@ int CU()
     nval.it_value.tv_usec = 0;
 
     sc_commandDecode(memory_val, &command_num, &operand);
-        
-    switch(command_num)
+
+    if (command_num >= 30 && command_num <= 33)
+    {
+        //TODO ALU()
+    }    
+    else if (command_num >= 51 && command_num <= 54)
+    {
+        //TODo ALU()
+    }
+    else switch(command_num)
     {
         case 10: // READ
-            mt_gotoXY(input_x++, input_y);
-            rk_mytermrestore();
-            printf("New value of RAM[%d]: ", operand);
-            fflush(stdout);
+            if (VALID_MEM(operand))
+            {
+                mt_gotoXY(input_x++, input_y);
+                rk_mytermrestore();
+                printf("New value of RAM[%d]: ", operand);
+                fflush(stdout);
 
-            scanf("%d", (RAM + operand));
+                scanf("%d", (RAM + operand));
 
-            rk_mytermregime(OFF, 0, 1, OFF, OFF);
+                rk_mytermregime(OFF, 0, 1, OFF, OFF);
+            }
+            else sc_regSet(WRONG_OPCODE, 1);
             break;
 
         case 11: // WRITE
-            mt_gotoXY(input_x++, input_y);
-            printf("Value of RAM[%d]: ", operand);
-            fflush(stdout);
+            if (VALID_MEM(operand))
+            {
+                mt_gotoXY(input_x++, input_y);
+                printf("Value of RAM[%d]: ", operand);
+                fflush(stdout);
 
-            printf("%d", *(RAM + operand));
+                printf("%d", *(RAM + operand));
+            }
+            else sc_regSet(WRONG_OPCODE, 1);
             break;
 
         case 20: // LOAD
-            Accumulator = *(RAM + operand);
+            if (VALID_MEM(operand))
+                Accumulator = *(RAM + operand);
+            else sc_regSet(WRONG_OPCODE, 1);
             break;
-
 
         case 21: // STORE
-            *(RAM + operand) = Accumulator;
+            if (VALID_MEM(operand))
+                *(RAM + operand) = Accumulator;
+            else sc_regSet(WRONG_OPCODE, 1);
             break;
+
+        case 40: // JUMP
+            if (VALID_MEM(operand))
+                IC = operand;
+            else sc_regSet(WRONG_OPCODE, 1);
+            return EXIT_SUCCESS;
+        
+        case 41: // JNEG
+            if (Accumulator < 0)
+                if (VALID_MEM(operand))
+                    IC = operand;
+            else sc_regSet(WRONG_OPCODE, 1);
+            return EXIT_SUCCESS;
+
+        case 42: // JZ
+            if (Accumulator == 0)
+                if (VALID_MEM(operand))
+                    IC = operand;
+            else sc_regSet(WRONG_OPCODE, 1);
+            return EXIT_SUCCESS;
+            
+        case 43: // HALT
+            return EXIT_SUCCESS;
 
         default:
             break;    
@@ -261,12 +311,19 @@ int main()
     rk_mytermregime(OFF, 0, 1, OFF, OFF);
     atexit(restore_term);
 
-    //Presets
+    //Presets/////
+    
     sc_commandEncode(10, 10, RAM);
     sc_commandEncode(11, 10, (RAM + 1));
     sc_commandEncode(20, 10, (RAM + 2));
     sc_commandEncode(21, 11, (RAM + 3));
-         
+    sc_commandEncode(40, 99, (RAM + 4));
+    sc_commandEncode(42, 99, (RAM + 12));
+    sc_commandEncode(40, 0, (RAM + 13));
+    sc_commandEncode(43, 0, (RAM + 99));
+
+    //////////////
+    
     signal(SIGALRM, signalhandler_timer);
     signal(SIGUSR1, signalhandler_reset);
     
@@ -275,7 +332,7 @@ int main()
     nval.it_value.tv_sec = 1;
     nval.it_value.tv_usec = 0;
 
-    setitimer(ITIMER_REAL, &nval, &oval);
+    // setitimer(ITIMER_REAL, &nval, &oval);
 
     int new_ic;
     char ch;
@@ -288,6 +345,19 @@ int main()
         read(0, &ch, 1);
 
         if(ch == 'q') break;
+        
+        if(ch == 'r')
+        {
+            signal(SIGALRM, signalhandler_timer);
+            setitimer(ITIMER_REAL, &nval, &oval);
+        }
+
+        if(ch == 't')
+        {
+            signal(SIGALRM, SIG_IGN);
+            CU();
+            signal(SIGALRM, SIG_IGN);
+        }
 
         if (ch == 27)
         {
@@ -451,8 +521,8 @@ int main()
 
             raise(SIGUSR1);
 
-            signal(SIGALRM, signalhandler_timer);
-            setitimer(ITIMER_REAL, &nval, &oval);
+           // signal(SIGALRM, signalhandler_timer);
+           // setitimer(ITIMER_REAL, &nval, &oval);
         }
 
         ch = 0;
