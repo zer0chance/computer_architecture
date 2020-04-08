@@ -284,6 +284,50 @@ int ALU(int command_num, int operand)
             else sc_regSet(WRONG_OPCODE, 1);
             break;  
 
+        case 64: // NEG TODO !!!!!!!!!!!!!!
+            if (VALID_MEM(operand))     
+                Accumulator = right_shift(RAM[operand], 1); 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+            
+        case 65: // ADDC 
+            if (VALID_MEM(operand))     
+                Accumulator = RAM[operand] + RAM[Accumulator]; 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+            
+        case 66: // SUBC 
+            if (VALID_MEM(operand))     
+                Accumulator = RAM[operand] - RAM[Accumulator]; 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+
+
+        case 67: // LOGICLC
+            if (VALID_MEM(operand))     
+                Accumulator = RAM[operand] << Accumulator; 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+
+        case 68: // LOGICRC
+            if (VALID_MEM(operand))     
+                Accumulator = RAM[operand] >> Accumulator; 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+
+        case 69: // RCCL
+            if (VALID_MEM(operand))     
+                Accumulator = left_shift(RAM[operand], Accumulator); 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+            
+        case 70: // RCCR
+            if (VALID_MEM(operand))     
+                Accumulator = right_shift(RAM[operand], Accumulator); 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+
+
 
     return EXIT_SUCCESS;
     }
@@ -431,6 +475,40 @@ int CU()
                 else sc_regSet(WRONG_OPCODE, 1);
             }    
             return EXIT_SUCCESS;
+
+        case 71: // MOVA
+            if (VALID_MEM(operand) && VALID_MEM(Accumulator))
+            {
+                RAM[Accumulator] = RAM[operand];
+                RAM[operand] = 0;
+            }
+            break;
+
+        case 72: // MOVR
+            if (VALID_MEM(operand) && VALID_MEM(Accumulator))
+            {
+                RAM[operand] = RAM[Accumulator];
+                RAM[Accumulator] = 0;
+            }
+            break;
+
+        case 73: // MOVCA
+            if (VALID_MEM(operand) && VALID_MEM(Accumulator))
+            {
+                RAM[RAM[Accumulator]] = RAM[operand];
+                RAM[operand] = 0;
+            }
+            break;
+
+        case 74: // MOVCR
+            if (VALID_MEM(operand) && VALID_MEM(Accumulator))
+            {
+                RAM[operand] = RAM[RAM[Accumulator]];
+                RAM[Accumulator] = 0;
+            }
+            break;
+
+
 
         default:
             break;    
