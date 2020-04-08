@@ -284,9 +284,14 @@ int ALU(int command_num, int operand)
             else sc_regSet(WRONG_OPCODE, 1);
             break;  
 
-        case 64: // NEG TODO !!!!!!!!!!!!!!
-            if (VALID_MEM(operand))     
-                Accumulator = right_shift(RAM[operand], 1); 
+        case 64: // NEG
+            if (VALID_MEM(operand))
+            {    
+                if (RAM[operand] > 0)    
+                    Accumulator = RAM[operand]; 
+                else 
+                    Accumulator = (~RAM[operand] + 1) | 0x8000; 
+            } 
             else sc_regSet(WRONG_OPCODE, 1);
             break;  
             
@@ -419,71 +424,71 @@ int CU()
             return EXIT_SUCCESS;
         
         case 41: // JNEG
-            if (Accumulator < 0)
+            if (VALID_MEM(operand))
             {
-                if (VALID_MEM(operand))
+                if (Accumulator < 0)
                     IC = operand;
-                else sc_regSet(WRONG_OPCODE, 1);
             }    
+            else sc_regSet(WRONG_OPCODE, 1);
             return EXIT_SUCCESS;
 
         case 42: // JZ
-            if (Accumulator == 0)
+            if (VALID_MEM(operand))
             {
-                if (VALID_MEM(operand))
+                if (Accumulator == 0)
                     IC = operand;
-                else sc_regSet(WRONG_OPCODE, 1);
             }    
+            else sc_regSet(WRONG_OPCODE, 1);
             return EXIT_SUCCESS;
             
         case 43: // HALT
             return EXIT_SUCCESS;
 
         case 55: // JNP
-            if (Accumulator > 0)
+            if (VALID_MEM(operand))
             {
-                if (VALID_MEM(operand))
+                if (Accumulator > 0)
                     IC = operand;
-                else sc_regSet(WRONG_OPCODE, 1);
             }    
+            else sc_regSet(WRONG_OPCODE, 1);
             return EXIT_SUCCESS;
         
         case 56: // JC
-            sc_regGet(OP_OVERFLOW, &flag);
-            if (flag)
+            if (VALID_MEM(operand))
             {
-                if (VALID_MEM(operand))
+                sc_regGet(OP_OVERFLOW, &flag);
+                if (flag)
                     IC = operand;
-                else sc_regSet(WRONG_OPCODE, 1);
             }    
+            else sc_regSet(WRONG_OPCODE, 1);
             return EXIT_SUCCESS;
 
         case 57: // JNC
-            sc_regGet(OP_OVERFLOW, &flag);
-            if (!flag)
+            if (VALID_MEM(operand))
             {
-                if (VALID_MEM(operand))
+                sc_regGet(OP_OVERFLOW, &flag);
+                if (!flag)
                     IC = operand;
-                else sc_regSet(WRONG_OPCODE, 1);
             }    
+            else sc_regSet(WRONG_OPCODE, 1);
             return EXIT_SUCCESS;
 
         case 58: // JP
-            if (EVEN(Accumulator))
+            if (VALID_MEM(operand))
             {
-                if (VALID_MEM(operand))
+                if (EVEN(Accumulator))
                     IC = operand;
-                else sc_regSet(WRONG_OPCODE, 1);
             }    
+            else sc_regSet(WRONG_OPCODE, 1);
             return EXIT_SUCCESS;
 
         case 59: // JNP
-            if (ODD(Accumulator))
+            if (VALID_MEM(operand))
             {
-                if (VALID_MEM(operand))
+                if (ODD(Accumulator))
                     IC = operand;
-                else sc_regSet(WRONG_OPCODE, 1);
             }    
+            else sc_regSet(WRONG_OPCODE, 1);
             return EXIT_SUCCESS;
 
         case 71: // MOVA
@@ -543,19 +548,21 @@ int main()
     rk_mytermregime(OFF, 0, 1, OFF, OFF);
     atexit(restore_term);
 
+#ifdef DEBUG    
     //Presets/////
-    
-    sc_commandEncode(10, 10, RAM);
-    sc_commandEncode(11, 10, (RAM + 1));
-    sc_commandEncode(20, 10, (RAM + 2));
-    sc_commandEncode(21, 11, (RAM + 3));
-    sc_commandEncode(40, 99, (RAM + 4));
-    sc_commandEncode(42, 99, (RAM + 12));
-    sc_commandEncode(40, 0, (RAM + 13));
-    sc_commandEncode(43, 0, (RAM + 99));
+     
+    // sc_commandEncode(10, 10, RAM);
+    // sc_commandEncode(11, 10, (RAM + 1));
+    // sc_commandEncode(20, 10, (RAM + 2));
+    // sc_commandEncode(21, 11, (RAM + 3));
+    // sc_commandEncode(40, 99, (RAM + 4));
+    // sc_commandEncode(42, 99, (RAM + 12));
+    // sc_commandEncode(40, 0, (RAM + 13));
+    // sc_commandEncode(43, 0, (RAM + 99));
 
     //////////////
-    
+#endif
+
     signal(SIGALRM, signalhandler_timer);
     signal(SIGUSR1, signalhandler_reset);
     
