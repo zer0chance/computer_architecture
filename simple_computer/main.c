@@ -327,7 +327,17 @@ int ALU(int command_num, int operand)
             else sc_regSet(WRONG_OPCODE, 1);
             break;  
 
+        case 75: // ADDC
+            if (VALID_MEM(operand) && VALID_MEM(Accumulator))
+                Accumulator = RAM[operand] + RAM[RAM[Accumulator]];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;
 
+        case 76: // SUBC 
+            if (VALID_MEM(operand) && VALID_MEM(Accumulator))
+                Accumulator = RAM[operand] - RAM[RAM[Accumulator]];
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;
 
     return EXIT_SUCCESS;
     }
@@ -482,6 +492,7 @@ int CU()
                 RAM[Accumulator] = RAM[operand];
                 RAM[operand] = 0;
             }
+            else sc_regSet(WRONG_OPCODE, 1);
             break;
 
         case 72: // MOVR
@@ -490,6 +501,7 @@ int CU()
                 RAM[operand] = RAM[Accumulator];
                 RAM[Accumulator] = 0;
             }
+            else sc_regSet(WRONG_OPCODE, 1);
             break;
 
         case 73: // MOVCA
@@ -498,6 +510,7 @@ int CU()
                 RAM[RAM[Accumulator]] = RAM[operand];
                 RAM[operand] = 0;
             }
+            else sc_regSet(WRONG_OPCODE, 1);
             break;
 
         case 74: // MOVCR
@@ -506,9 +519,8 @@ int CU()
                 RAM[operand] = RAM[RAM[Accumulator]];
                 RAM[Accumulator] = 0;
             }
+            else sc_regSet(WRONG_OPCODE, 1);
             break;
-
-
 
         default:
             break;    
@@ -519,6 +531,7 @@ int CU()
 
     if (IC == 99) IC = 0;
     else IC++;
+
     return EXIT_SUCCESS;
 }
 
