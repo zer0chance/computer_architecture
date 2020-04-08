@@ -5,6 +5,8 @@
 #include "mySimpleComputer.h"
  
 #define VALID_MEM(a) (a > 0) ? ((a < 100) ? 1 : 0) : 0
+#define EVEN(a) (a % 2 == 0) ? 1 : 0
+#define ODD(a) (a % 2 == 0) ? 0 : 1
 
 struct itimerval nval, oval;
 
@@ -236,28 +238,27 @@ int ALU(int command_num, int operand)
             else sc_regSet(WRONG_OPCODE, 1);
             break;        
                
-        case 52: // NOT
+        case 51: // NOT               
             Accumulator = ~Accumulator;
-            break;        
+            break;
         
         case 52: // AND
             if (VALID_MEM(operand))
                 Accumulator &= RAM[operand];
             else sc_regSet(WRONG_OPCODE, 1);
-            break;        
-
+            break;
+                 
         case 53: // OR
-            if (VALID_MEM(operand))
+            if (VALID_MEM(operand)) 
                 Accumulator |= RAM[operand];
             else sc_regSet(WRONG_OPCODE, 1);
-            break;        
-
-        case 54: // XOR
-            if (VALID_MEM(operand))
-                Accumulator ^= RAM[operand];
+            break;                         
+                                          
+        case 54: // XOR                  
+            if (VALID_MEM(operand))     
+                Accumulator ^= RAM[operand]; 
             else sc_regSet(WRONG_OPCODE, 1);
-            break;        
-    
+            break;  
     return EXIT_SUCCESS;
 }
 
@@ -330,19 +331,68 @@ int CU()
         
         case 41: // JNEG
             if (Accumulator < 0)
+            {
                 if (VALID_MEM(operand))
                     IC = operand;
-            else sc_regSet(WRONG_OPCODE, 1);
+                else sc_regSet(WRONG_OPCODE, 1);
+            }    
             return EXIT_SUCCESS;
 
         case 42: // JZ
             if (Accumulator == 0)
+            {
                 if (VALID_MEM(operand))
                     IC = operand;
-            else sc_regSet(WRONG_OPCODE, 1);
+                else sc_regSet(WRONG_OPCODE, 1);
+            }    
             return EXIT_SUCCESS;
             
         case 43: // HALT
+            return EXIT_SUCCESS;
+
+        case 55: // JNP
+            if (Accumulator > 0)
+            {
+                if (VALID_MEM(operand))
+                    IC = operand;
+                else sc_regSet(WRONG_OPCODE, 1);
+            }    
+            return EXIT_SUCCESS;
+        
+        case 56: // JC TODO !!!!!!!!!!!!!
+            if (Accumulator < 0)
+            {
+                if (VALID_MEM(operand))
+                    IC = operand;
+                else sc_regSet(WRONG_OPCODE, 1);
+            }    
+            return EXIT_SUCCESS;
+
+        case 57: // JNC TODO !!!!!!!!!!!!!
+            if (Accumulator == 0)
+            {
+                if (VALID_MEM(operand))
+                    IC = operand;
+                else sc_regSet(WRONG_OPCODE, 1);
+            }    
+            return EXIT_SUCCESS;
+
+        case 58: // JP
+            if (EVEN(Accumulator))
+            {
+                if (VALID_MEM(operand))
+                    IC = operand;
+                else sc_regSet(WRONG_OPCODE, 1);
+            }    
+            return EXIT_SUCCESS;
+
+        case 59: // JNP
+            if (ODD(Accumulator))
+            {
+                if (VALID_MEM(operand))
+                    IC = operand;
+                else sc_regSet(WRONG_OPCODE, 1);
+            }    
             return EXIT_SUCCESS;
 
         default:
