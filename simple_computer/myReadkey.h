@@ -50,6 +50,7 @@ int rk_mytermrestore(void)
 int rk_mytermregime(int regime, int vtime, int vmin, int echo, int sigint)
 {
     struct termios ts;
+    ts.c_lflag = 0;
     if(regime) 
         ts.c_lflag |= ICANON;
     else 

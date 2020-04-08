@@ -5,4 +5,6 @@
 run.sh
 bigChars
 test.c
+tst.c
 tags
+simple_computer

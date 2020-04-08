@@ -338,9 +338,9 @@ int ALU(int command_num, int operand)
                 Accumulator = RAM[operand] - RAM[RAM[Accumulator]];
             else sc_regSet(WRONG_OPCODE, 1);
             break;
+    }
 
     return EXIT_SUCCESS;
-    }
 }
 
 
