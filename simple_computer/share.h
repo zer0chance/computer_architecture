@@ -72,3 +72,31 @@ int bc_chars[18][2] =
     {404232447, 4279769112},   // +
     {255, 4278190080}          // -
 };
+
+
+int left_shift(int n, unsigned int k) 
+{
+     unsigned int bit;
+     for (int i = 0; i < k; i++) 
+     {
+        bit = n & 0x8000 ? 1 : 0;
+        n <<= 1;
+        n |= bit;            
+    }
+
+    return n;      
+}
+
+
+int right_shift (int n, unsigned int k) 
+{
+     unsigned int bit;
+     for (int i = 0; i < k; i++) 
+     {
+        bit = n & 0x0001;
+        n >>= 1;
+        n |= bit << 15;
+    }
+
+    return n;      
+}

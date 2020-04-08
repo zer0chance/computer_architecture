@@ -259,19 +259,46 @@ int ALU(int command_num, int operand)
                 Accumulator ^= RAM[operand]; 
             else sc_regSet(WRONG_OPCODE, 1);
             break;  
+
+        case 60: // CHL                  
+            if (VALID_MEM(operand))     
+                Accumulator = RAM[operand] << 1; 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+
+        case 61: // SHR                  
+            if (VALID_MEM(operand))     
+                Accumulator = RAM[operand] >> 1; 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+            
+        case 62: // RCL                  
+            if (VALID_MEM(operand))     
+                Accumulator = left_shift(RAM[operand], 1); 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+
+        case 63: // RCR                  
+            if (VALID_MEM(operand))     
+                Accumulator = right_shift(RAM[operand], 1); 
+            else sc_regSet(WRONG_OPCODE, 1);
+            break;  
+
+
     return EXIT_SUCCESS;
+    }
 }
 
 
 int CU()
 {
     int memory_val = RAM[IC] ;
-    int command_num, operand;    
+    int command_num, operand, flag;    
     nval.it_interval.tv_sec = 1;
     nval.it_interval.tv_usec = 0;
     nval.it_value.tv_sec = 1;
     nval.it_value.tv_usec = 0;
-
+    
     sc_commandDecode(memory_val, &command_num, &operand);
 
     if (command_num >= 30 && command_num <= 33)
@@ -279,6 +306,14 @@ int CU()
         ALU(command_num, operand);
     }    
     else if (command_num >= 51 && command_num <= 54)
+    {
+        ALU(command_num, operand);
+    }
+    else if (command_num >= 60 && command_num <= 70)
+    {
+        ALU(command_num, operand);
+    }
+    else if (command_num == 75 || command_num == 76)
     {
         ALU(command_num, operand);
     }
@@ -359,8 +394,9 @@ int CU()
             }    
             return EXIT_SUCCESS;
         
-        case 56: // JC TODO !!!!!!!!!!!!!
-            if (Accumulator < 0)
+        case 56: // JC
+            sc_regGet(OP_OVERFLOW, &flag);
+            if (flag)
             {
                 if (VALID_MEM(operand))
                     IC = operand;
@@ -368,8 +404,9 @@ int CU()
             }    
             return EXIT_SUCCESS;
 
-        case 57: // JNC TODO !!!!!!!!!!!!!
-            if (Accumulator == 0)
+        case 57: // JNC
+            sc_regGet(OP_OVERFLOW, &flag);
+            if (!flag)
             {
                 if (VALID_MEM(operand))
                     IC = operand;
