@@ -386,7 +386,7 @@ int CU()
                 printf("New value of RAM[%d]: ", operand);
                 fflush(stdout);
 
-                scanf("%d", (RAM + operand));
+                scanf("%hd", (RAM + operand));
 
                 rk_mytermregime(OFF, 0, 1, OFF, OFF);
             }
@@ -746,7 +746,7 @@ int main()
             printf("Change to: ");
             fflush(stdout);
 
-            scanf("%d", &(RAM[selected_pos]));
+            scanf("%hd", &(RAM[selected_pos]));
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
             signal(SIGALRM, signalhandler_timer);
             setitimer(ITIMER_REAL, &nval, &oval);

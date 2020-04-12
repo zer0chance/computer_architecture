@@ -8,7 +8,7 @@
 #define OPERAND 0x7f        //             1111111
 
 uint8_t FLAGS;
-int RAM[RAM_MAX_SIZE];
+uint16_t RAM[RAM_MAX_SIZE];
 uint16_t IC = 0;
 int32_t Accumulator = 0;
 
