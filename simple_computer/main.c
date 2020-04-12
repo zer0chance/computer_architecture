@@ -17,7 +17,7 @@ void print_selected()
     else
         bc_printbigchar(bc_chars[PLUS], 17, 3, 0, 0);
 
-    int comand_num, operand;  
+    uint16_t comand_num, operand;  
     sc_commandDecode(RAM[selected_pos], &comand_num, &operand);
 
     bc_printbigchar(bc_chars[(comand_num >> 4) & 7], 17, 12, 0, 0);
@@ -68,7 +68,7 @@ void print_memory()
     bc_box(4, 2, 62, 12);
     mt_gotoXY(4, 29);
     printf("Memory");
-    int comand_num, operand;
+    uint16_t comand_num, operand;
     for (int i = 0, k = 0, x = 5; i < 10; i++, x++)
     {
         mt_gotoXY(x, 3);
@@ -332,13 +332,13 @@ int ALU(int command_num, int operand)
             else sc_regSet(WRONG_OPCODE, 1);
             break;  
 
-        case 75: // ADDC
+        case 75: // ADDCС
             if (VALID_MEM(operand) && VALID_MEM(Accumulator))
                 Accumulator = RAM[operand] + RAM[RAM[Accumulator]];
             else sc_regSet(WRONG_OPCODE, 1);
             break;
 
-        case 76: // SUBC 
+        case 76: // SUBCС 
             if (VALID_MEM(operand) && VALID_MEM(Accumulator))
                 Accumulator = RAM[operand] - RAM[RAM[Accumulator]];
             else sc_regSet(WRONG_OPCODE, 1);
@@ -351,8 +351,9 @@ int ALU(int command_num, int operand)
 
 int CU()
 {
-    int memory_val = RAM[IC] ;
-    int command_num, operand, flag;    
+    uint16_t memory_val = RAM[IC] ;
+    uint16_t command_num, operand;
+    int flag;    
     nval.it_interval.tv_sec = 1;
     nval.it_interval.tv_usec = 0;
     nval.it_value.tv_sec = 1;
