@@ -1,6 +1,12 @@
 #include <string.h>
 #include "mySimpleComputer.h"
 
+#ifdef DEBUG
+#define DEBUG_ONLY(expr) expr
+#else
+#define DEBUG_ONLY(expr)
+#endif
+
 #define LINE_MAX_LENGTH 50
 #define ERROR_MSG printf("\033[31;1merror: \033[0m");
 
@@ -125,7 +131,7 @@ int interpreter(char* filename)
         int command_num = get_command_num(command_name);
         if(command_num)
         {
-            //printf("%d\n%s\n%d\n\n", mem_location, command_name, operand);
+            DEBUG_ONLY(printf("%d\n%s\n%d\n\n", mem_location, command_name, operand);)
             if(!error_flag) sc_commandEncode(command_num, operand, (RAM + mem_location));
         }
         else

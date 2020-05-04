@@ -19,7 +19,6 @@ struct __code_segment
 
 struct __heap
 {
-
     size_t size;      
 } heap;
 
@@ -127,8 +126,6 @@ int parse_src(char* filename)
 
 char* compile(char* result, int src_len)
 {
-    //char result[1000]; 
-    // result = (char *) calloc(1000, sizeof(char));
     code.current_pos = 0;
     uint16_t line_num = 0;
 
@@ -176,7 +173,7 @@ char* compile(char* result, int src_len)
         }    
     }
 
-    printf("\n Result: %s\n\n", result);    
+    DEBUG_ONLY(printf("\n Translation result: %s\n\n", result);)    
     return EXIT_SUCCESS;
 }
 
@@ -235,7 +232,7 @@ int main(int argc, char** argv)
             printf("\nCompilation: \033[31;1mfailed\033[0m\nexit code: %d\n", -3);
             return 0;
         } 
-        
+
         free(code);           
     }
 
