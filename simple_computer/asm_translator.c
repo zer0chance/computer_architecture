@@ -144,6 +144,8 @@ int interpreter(char* filename)
         current_line_number++;
     }
 
+    fclose(fd);
+
     if (error_flag)
         return EXIT_FAILURE;
     else    

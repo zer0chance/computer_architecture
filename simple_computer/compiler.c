@@ -15,14 +15,14 @@
 
 struct __code_segment
 {
-    __uint8_t current_pos;
+    uint8_t current_pos;
 
     char variables[30];
-    __uint8_t current_var_index;      
+    uint8_t current_var_index;      
 } code;
 
 
-struct __SRC_LINE__
+struct __src_lines
 {
     char line[SRC_LINE_MAX_LENGTH];
 
@@ -153,13 +153,15 @@ int compile(char* result, int src_len, char* filename)
             src_lines[i].code_begining_pos = line_num;
             if (line_num < 10) {
                 result[code.current_pos++] = '0';
-                sprintf(&(result[code.current_pos++]), "%d", line_num++);
+                sprintf(&(result[code.current_pos++]), "%d", line_num);
             } else {
-                sprintf(&(result[code.current_pos]), "%d", line_num++);
+                sprintf(&(result[code.current_pos]), "%d", line_num);
                 code.current_pos += 2;
             }
 
             sprintf(&(result[code.current_pos]), "%s", " HALT");
+            src_lines[i].code_begining_pos = line_num++;
+
             code.current_pos += 5;
         }
              
@@ -186,9 +188,9 @@ int compile(char* result, int src_len, char* filename)
             src_lines[i].code_begining_pos = line_num;
             if (line_num < 10) {
                 result[code.current_pos++] = '0';
-                sprintf(&(result[code.current_pos++]), "%d", line_num++);
+                sprintf(&(result[code.current_pos++]), "%d", line_num);
             } else {
-                sprintf(&(result[code.current_pos]), "%d", line_num++);
+                sprintf(&(result[code.current_pos]), "%d", line_num);
                 code.current_pos += 2;
             }
 
@@ -201,6 +203,7 @@ int compile(char* result, int src_len, char* filename)
             }
 
             sprintf(&(result[code.current_pos]), "%s%d", " READ ", index + HEAP_MEMORY_OFFSET);
+            src_lines[i].code_begining_pos = line_num++;
 
             code.current_pos += 8;
         }    
@@ -227,9 +230,9 @@ int compile(char* result, int src_len, char* filename)
             src_lines[i].code_begining_pos = line_num;
             if (line_num < 10) {
                 result[code.current_pos++] = '0';
-                sprintf(&(result[code.current_pos++]), "%d", line_num++);
+                sprintf(&(result[code.current_pos++]), "%d", line_num);
             } else {
-                sprintf(&(result[code.current_pos]), "%d", line_num++);
+                sprintf(&(result[code.current_pos]), "%d", line_num);
                 code.current_pos += 2;
             }
 
@@ -245,13 +248,47 @@ int compile(char* result, int src_len, char* filename)
             }
 
             sprintf(&(result[code.current_pos]), "%s%d", " WRITE ", index + HEAP_MEMORY_OFFSET);
+            src_lines[i].code_begining_pos = line_num++;
 
             code.current_pos += 9;
         }   
         
         else if (!strcmp(src_lines[i].operand, "GOTO"))
         {
-            continue;
+            for (int i = 0; i < strlen(src_lines[i].args); i++)
+            {
+                if (src_lines[i].args[i] < '0' && src_lines[i].args[i] > '9')
+                {
+                    ERROR_MSG
+                    printf("%s: line %d: invalid line number to GOTO : \033[1m%s\033[0m",    \
+                            filename, src_lines[i].line_number, src_lines[i].args);          \
+
+                    return EXIT_FAILURE;  
+                }
+            }
+            int jump_adress = (int)strtol(src_lines[i].args, NULL, 10); 
+            if (jump_adress < 1 || jump_adress > SRC_MAX_LINES)                        
+            {                                                              
+                ERROR_MSG
+                printf("%s: line %d: invalid memory location: %d",                           \
+                        filename, src_lines[i].line_number, jump_adress);                    \
+
+                return EXIT_FAILURE;        
+            }
+
+            src_lines[i].code_begining_pos = line_num;
+            if (line_num < 10) {
+                result[code.current_pos++] = '0';
+                sprintf(&(result[code.current_pos++]), "%d", line_num);
+            } else {
+                sprintf(&(result[code.current_pos]), "%d", line_num);
+                code.current_pos += 2;
+            }
+
+            sprintf(&(result[code.current_pos]), "%s%d", " JUMP ", src_lines[jump_adress - 1].code_begining_pos);
+            src_lines[i].code_begining_pos = line_num++;
+
+            code.current_pos += 8;
         }  
         
         else if (!strcmp(src_lines[i].operand, "LET"))
