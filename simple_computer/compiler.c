@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 #include "mySimpleComputer.h"
 
 #ifdef DEBUG
@@ -10,17 +11,16 @@
 #define ERROR_MSG printf("\033[31;1merror: \033[0m");
 #define SRC_MAX_LINES 30
 #define SRC_LINE_MAX_LENGTH 50
+#define HEAP_MEMORY_OFFSET 70
 
 struct __code_segment
 {
     __uint8_t current_pos;
-    size_t size;      
+
+    char variables[30];
+    __uint8_t current_var_index;      
 } code;
 
-struct __heap
-{
-    size_t size;      
-} heap;
 
 struct __SRC_LINE__
 {
@@ -79,7 +79,7 @@ int parse_src(char* filename)
         if (src_lines[line_num].line_number < 1 || src_lines[line_num].line_number > 30)
         {
             ERROR_MSG
-            printf("%s: line %d: misspeled line num %d\n", filename, line_num + 1, src_lines[line_num].line_number);
+            printf("%s: line %d: misspeled line num: %d\n", filename, line_num + 1, src_lines[line_num].line_number);
             error_flag = 1;
         }
 
@@ -93,7 +93,7 @@ int parse_src(char* filename)
         else
         {
             ERROR_MSG
-            printf("%s: line %d: unknown operand \033[1m%s\033[0m\n", filename, line_num + 1, operand);
+            printf("%s: line %d: unknown operand: \033[1m%s\033[0m\n", filename, line_num + 1, operand);
             error_flag = 1;
         }
 
@@ -110,8 +110,8 @@ int parse_src(char* filename)
         {
             error_flag = 1;
             ERROR_MSG
-            printf("%s: lines %d %d: line numbers misorder \033[1m%d %d\033[0m\n",                  \
-                    filename, i, i + 1, src_lines[i].line_number, src_lines[i + 1].line_number);    \
+            printf("%s: lines %d %d: line numbers misorder: \033[1m%d %d\033[0m\n",                  \
+                    filename, i, i + 1, src_lines[i].line_number, src_lines[i + 1].line_number);     \
         }
     }
     
@@ -124,9 +124,23 @@ int parse_src(char* filename)
 }
 
 
-char* compile(char* result, int src_len)
+int index_of_var(char ch)
+{
+    for (int i = 0; i < code.current_var_index; i++)
+    {
+        if (code.variables[i] == ch)
+            return i;
+    }
+
+    return -1;
+}
+
+
+int compile(char* result, int src_len, char* filename)
 {
     code.current_pos = 0;
+    code.current_var_index = 0;
+
     uint16_t line_num = 0;
 
     for (int i = 0; i < src_len; i++)
@@ -136,6 +150,7 @@ char* compile(char* result, int src_len)
 
         else if (!strcmp(src_lines[i].operand, "END"))
         {
+            src_lines[i].code_begining_pos = line_num;
             if (line_num < 10) {
                 result[code.current_pos++] = '0';
                 sprintf(&(result[code.current_pos++]), "%d", line_num++);
@@ -145,33 +160,114 @@ char* compile(char* result, int src_len)
             }
 
             sprintf(&(result[code.current_pos]), "%s", " HALT");
+            code.current_pos += 5;
         }
-            
-        else if (!strcmp(src_lines[i].operand, "LET"))
-        {
-            
-        }    
-
-        else if (!strcmp(src_lines[i].operand, "IF"))
-        {
-            
-        }    
+             
 
         else if (!strcmp(src_lines[i].operand, "INPUT"))
         {
-            
+            if (strlen(src_lines[i].args) > 2)      // Second is '\0'
+            {
+                ERROR_MSG
+                printf("%s: line %d: variable name can contain only one character: \033[1m%s\033[0m",   \
+                        filename, src_lines[i].line_number, src_lines[i].args);                         \
+
+                return EXIT_FAILURE;
+            }
+            if (islower(src_lines[i].args[0]))
+            {
+                ERROR_MSG
+                printf("%s: line %d: only uppercase variable names allowed: \033[1m%s\033[0m",       \
+                        filename, src_lines[i].line_number, src_lines[i].args);                      \
+
+                return EXIT_FAILURE;
+            }
+
+            src_lines[i].code_begining_pos = line_num;
+            if (line_num < 10) {
+                result[code.current_pos++] = '0';
+                sprintf(&(result[code.current_pos++]), "%d", line_num++);
+            } else {
+                sprintf(&(result[code.current_pos]), "%d", line_num++);
+                code.current_pos += 2;
+            }
+
+            int index = index_of_var(src_lines[i].args[0]);
+
+            if (index == -1)   // Not initialized yet
+            {
+                index = code.current_var_index;
+                code.variables[code.current_var_index++] = src_lines[i].args[0];
+            }
+
+            sprintf(&(result[code.current_pos]), "%s%d", " READ ", index + HEAP_MEMORY_OFFSET);
+
+            code.current_pos += 8;
         }    
 
         else if (!strcmp(src_lines[i].operand, "OUTPUT"))
         {
-            
-        }    
+            if (strlen(src_lines[i].args) > 2)      // Second is '\0'
+            {
+                ERROR_MSG
+                printf("%s: line %d: variable name can contain only one character: \033[1m%s\033[0m",   \
+                        filename, src_lines[i].line_number, src_lines[i].args);                         \
 
+                return EXIT_FAILURE;
+            }
+            if (islower(src_lines[i].args[0]))
+            {
+                ERROR_MSG
+                printf("%s: line %d: only uppercase variable names allowed: \033[1m%s\033[0m",        \
+                        filename, src_lines[i].line_number, src_lines[i].args);                       \
+
+                return EXIT_FAILURE;
+            }
+
+            src_lines[i].code_begining_pos = line_num;
+            if (line_num < 10) {
+                result[code.current_pos++] = '0';
+                sprintf(&(result[code.current_pos++]), "%d", line_num++);
+            } else {
+                sprintf(&(result[code.current_pos]), "%d", line_num++);
+                code.current_pos += 2;
+            }
+
+            int index = index_of_var(src_lines[i].args[0]);
+
+            if (index == -1)   // Not initialized yet
+            {
+                ERROR_MSG
+                printf("%s: line %d: uninitialized variable: \033[1m%c\033[0m",            \
+                        filename, src_lines[i].line_number, src_lines[i].args[0]);         \
+
+                return EXIT_FAILURE;
+            }
+
+            sprintf(&(result[code.current_pos]), "%s%d", " WRITE ", index + HEAP_MEMORY_OFFSET);
+
+            code.current_pos += 9;
+        }   
+        
         else if (!strcmp(src_lines[i].operand, "GOTO"))
         {
-            
+            continue;
+        }  
+        
+        else if (!strcmp(src_lines[i].operand, "LET"))
+        {
+            continue;
         }    
+
+        else if (!strcmp(src_lines[i].operand, "IF"))
+        {
+            continue;
+        }    
+  
+        result[code.current_pos++] = '\n';
     }
+
+    result[code.current_pos] = '\0';
 
     DEBUG_ONLY(printf("\n Translation result: %s\n\n", result);)    
     return EXIT_SUCCESS;
@@ -208,7 +304,7 @@ int main(int argc, char** argv)
     {
         char* code = (char *) calloc(1000, sizeof(char));
         
-        if(!compile(code, src_len))
+        if(!compile(code, src_len, filename))
         {
             printf("\nCompilation: \033[32;1msuccess\033[0m\nexit code: 0\n");
             char* file = strtok(filename, ".");
@@ -223,7 +319,7 @@ int main(int argc, char** argv)
             }
 
             if(fputs(code, res) == EOF)
-                printf("\nfailed to write result to file %s", file);
+                printf("\nfailed to write result to file %s\n", file);
 
             fclose(res);    
         }
