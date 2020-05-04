@@ -555,7 +555,7 @@ int main()
     atexit(restore_term);
 
 #ifdef DEBUG    
-    //Presets/////
+    /////// Presets ///////
      
     sc_commandEncode(10, 10, RAM);
     sc_commandEncode(11, 10, (RAM + 1));
@@ -566,7 +566,7 @@ int main()
     sc_commandEncode(40, 0, (RAM + 13));
     sc_commandEncode(43, 0, (RAM + 99));
 
-    //////////////
+    ///////////////////////
 #endif
 
     signal(SIGALRM, signalhandler_timer);
