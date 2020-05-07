@@ -1,6 +1,8 @@
 #include <string.h>
 #include <ctype.h>
-#include "mySimpleComputer.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 #ifdef DEBUG
 #define DEBUG_ONLY(expr) expr
@@ -24,33 +26,48 @@
     }                                                               
 
 
-#define POP_AND_CALCULATE switch (op[op_pos])       \
-{                                                   \
-    case '+':                                       \
-        num[num_pos - 1] += num[num_pos];           \
-        num_pos--;                                  \
-        op_pos--;                                   \
-        break;                                      \
-    case '-':                                       \
-        num[num_pos - 1] -= num[num_pos];           \
-        num_pos--;                                  \
-        op_pos--;                                   \
-        break;                                      \
-    case '/':                                       \
-        num[num_pos - 1] /= num[num_pos];           \
-        num_pos--;                                  \
-        op_pos--;                                   \
-        break;                                      \
-    case '*':                                       \
-        num[num_pos - 1] *= num[num_pos];           \
-        num_pos--;                                  \
-        op_pos--;                                   \
-        break;                                      \
-    default:                                        \
-        ERROR_MSG                                   \
-        exit(0);                                    \
-}                                                   
+#define POP_AND_CALCULATE switch (op[op_pos])           \
+    {                                                   \
+        case '+':                                       \
+            num[num_pos - 1] += num[num_pos];           \
+            num_pos--;                                  \
+            op_pos--;                                   \
+            break;                                      \
+        case '-':                                       \
+            num[num_pos - 1] -= num[num_pos];           \
+            num_pos--;                                  \
+            op_pos--;                                   \
+            break;                                      \
+        case '/':                                       \
+            num[num_pos - 1] /= num[num_pos];           \
+            num_pos--;                                  \
+            op_pos--;                                   \
+            break;                                      \
+        case '*':                                       \
+            num[num_pos - 1] *= num[num_pos];           \
+            num_pos--;                                  \
+            op_pos--;                                   \
+            break;                                      \
+        default:                                        \
+            ERROR_MSG                                   \
+            exit(0);                                    \
+    }                                                   
 
+
+#define CHEK_VARIABLE(var) if (strlen(var) > 2)                                                 \
+    {                                                                                           \
+        ERROR_MSG                                                                               \
+        printf("%s: line %d: variable name can contain only one character: \033[1m%s\033[0m",   \
+                filename, src_lines[i].line_number, var);                                       \
+        return EXIT_FAILURE;                                                                    \
+    }                                                                                           \
+    if (islower(var[0]))                                                                        \
+    {                                                                                           \
+        ERROR_MSG                                                                               \
+        printf("%s: line %d: only uppercase variable names allowed: \033[1m%s\033[0m",          \
+                filename, src_lines[i].line_number, var);                                       \
+        return EXIT_FAILURE;                                                                    \
+    }
 
 struct __code_segment
 {
@@ -231,7 +248,7 @@ int handle_expression(char* exp)
         exp++;
         isNegative = 1;
     }
-    printf("Expr: %s %c\n\n", exp, *exp);
+    
     while(*exp != '\0')
     {
         if (*exp == ' ' || *exp == '\n') {
@@ -256,8 +273,7 @@ int handle_expression(char* exp)
 
             exp++;
         } else if(isdigit(*exp)) {
-            num[++num_pos] = strtol(exp, &exp, 10);
-            //printf("%d %s\n", num[num_pos], exp);        
+            num[++num_pos] = strtol(exp, &exp, 10);      
         } else {
             ERROR_MSG
             printf("unknown symbol: \033[1m%c\033[0m", *exp);
@@ -320,22 +336,7 @@ int compile(char* result, int src_len, char* filename)
 
         else if (!strcmp(src_lines[i].operand, "INPUT"))
         {
-            if (strlen(src_lines[i].args) > 2)      // Second is '\0'
-            {
-                ERROR_MSG
-                printf("%s: line %d: variable name can contain only one character: \033[1m%s\033[0m",   \
-                        filename, src_lines[i].line_number, src_lines[i].args);                         
-
-                return EXIT_FAILURE;
-            }
-            if (islower(src_lines[i].args[0]))
-            {
-                ERROR_MSG
-                printf("%s: line %d: only uppercase variable names allowed: \033[1m%s\033[0m",          \
-                        filename, src_lines[i].line_number, src_lines[i].args);                         
-
-                return EXIT_FAILURE;
-            }
+            CHEK_VARIABLE(src_lines[i].args)
 
             SET_LINE_NUMBER
 
@@ -356,22 +357,7 @@ int compile(char* result, int src_len, char* filename)
 
         else if (!strcmp(src_lines[i].operand, "OUTPUT"))
         {
-            if (strlen(src_lines[i].args) > 2)      // Second is '\0'
-            {
-                ERROR_MSG
-                printf("%s: line %d: variable name can contain only one character: \033[1m%s\033[0m",   \
-                        filename, src_lines[i].line_number, src_lines[i].args);                         
-
-                return EXIT_FAILURE;
-            }
-            if (islower(src_lines[i].args[0]))
-            {
-                ERROR_MSG
-                printf("%s: line %d: only uppercase variable names allowed: \033[1m%s\033[0m",        \
-                        filename, src_lines[i].line_number, src_lines[i].args);                       
-
-                return EXIT_FAILURE;
-            }
+            CHEK_VARIABLE(src_lines[i].args)
 
             SET_LINE_NUMBER
 
@@ -432,22 +418,7 @@ int compile(char* result, int src_len, char* filename)
 
             char* variable_name = strtok(args, " ");
 
-            if (strlen(variable_name) > 2)      // Second is '\0'
-            {
-                ERROR_MSG
-                printf("%s: line %d: variable name can contain only one character: \033[1m%s\033[0m",   \
-                        filename, src_lines[i].line_number, variable_name);                             
-
-                return EXIT_FAILURE;
-            }
-            if (islower(variable_name[0]))
-            {
-                ERROR_MSG
-                printf("%s: line %d: only uppercase variable names allowed: \033[1m%s\033[0m",          \
-                        filename, src_lines[i].line_number, src_lines[i].args);                         
-
-                return EXIT_FAILURE;
-            }
+            CHEK_VARIABLE(variable_name)
 
             SET_LINE_NUMBER
             src_lines[i].code_begining_pos = line_num++;
@@ -507,7 +478,329 @@ int compile(char* result, int src_len, char* filename)
 
         else if (!strcmp(src_lines[i].operand, "IF"))
         {
-            continue;
+            char* args = (char *) calloc(strlen(src_lines[i].args), sizeof(char));
+            strcpy(args, src_lines[i].args);
+
+            // Parse condition
+            char* val1 = strtok(args, " ");
+            char* sign = strtok(NULL, " ");
+            char* val2 = strtok(NULL, " ");
+
+            if (isdigit(*val1)) {
+                ERROR_MSG
+                printf("%s: line %d: can compare onli Var ? Var or Var ? 0: \033[1m%s\033[0m",     \
+                        filename, src_lines[i].line_number, src_lines[i].args);                       
+
+                return EXIT_FAILURE;
+            } else if (isdigit(*val2) && *val2 != '0') {
+                ERROR_MSG
+                printf("%s: line %d: can compare onli Var ? Var or Var ? 0: \033[1m%s\033[0m",     \
+                        filename, src_lines[i].line_number, src_lines[i].args);                       
+
+                return EXIT_FAILURE;
+            } 
+            
+
+            char* operation = strtok(NULL, " ");
+            
+            if(!strcmp(operation, "GOTO"))
+            {
+                int jump_line = (int)strtol(strtok(NULL, " "), NULL, 10);
+                if (jump_line < 0)
+                {
+                    ERROR_MSG
+                    printf("%s: line %d: invalid line to GOTO: \033[1m%d\033[0m",  \
+                            filename, src_lines[i].line_number, jump_line);                       
+
+                    return EXIT_FAILURE;
+                }
+
+                switch (*sign)
+                {
+                    case '=':  // v1 - v2 LOAD v1  SUB v2 JZ jump_line       
+                        if (*val2 == '0')
+                        {
+                            CHEK_VARIABLE(val1)
+                            int index = index_of_var(*val1);
+                            if (index == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val1);                       
+
+                                return EXIT_FAILURE;
+                            }
+
+                            SET_LINE_NUMBER
+                            src_lines[i].code_begining_pos = line_num++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 8;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " JZ ",  \
+                                    src_lines[jump_line - 1].code_begining_pos);
+
+                            code.current_pos += 4;
+                            while (jump_line)
+                            {
+                                jump_line /= 10;
+                                code.current_pos++;
+                            } 
+                            line_num++;
+                        }
+                        else
+                        {
+                            CHEK_VARIABLE(val1)
+                            CHEK_VARIABLE(val1)
+                            int index1 = index_of_var(*val1);
+                            if (index1 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val1);                       
+
+                                return EXIT_FAILURE;
+                            }
+                            int index2 = index_of_var(*val2);
+                            if (index2 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val2);                       
+
+                                return EXIT_FAILURE;
+                            }
+
+
+                            SET_LINE_NUMBER
+                            src_lines[i].code_begining_pos = line_num++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index1 + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 8;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " SUB ", index2 + HEAP_MEMORY_OFFSET);
+
+                            code.current_pos += 7;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " JZ ",  \
+                                    src_lines[jump_line - 1].code_begining_pos);
+                            code.current_pos += 4;
+                            while (jump_line)
+                            {
+                                jump_line /= 10;
+                                code.current_pos++;
+                            } 
+                            line_num++;
+                        }
+                        
+                        break;
+
+                    case '>':  // v2 - v1 -> JNEG
+                        if (*val2 == '0')
+                        {
+                            CHEK_VARIABLE(val1)
+                            int index = index_of_var(*val1);
+                            if (index == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val1);                       
+
+                                return EXIT_FAILURE;
+                            }
+
+                            SET_LINE_NUMBER
+                            src_lines[i].code_begining_pos = line_num++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 8;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " JNS ",  \
+                                    src_lines[jump_line - 1].code_begining_pos);
+
+                            code.current_pos += 5;
+                            while (jump_line)
+                            {
+                                jump_line /= 10;
+                                code.current_pos++;
+                            } 
+                            line_num++;
+                        }
+                        else
+                        {
+                            CHEK_VARIABLE(val1)
+                            CHEK_VARIABLE(val1)
+                            int index1 = index_of_var(*val1);
+                            if (index1 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val1);                       
+
+                                return EXIT_FAILURE;
+                            }
+                            int index2 = index_of_var(*val2);
+                            if (index2 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val2);                       
+
+                                return EXIT_FAILURE;
+                            }
+
+
+                            SET_LINE_NUMBER
+                            src_lines[i].code_begining_pos = line_num++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index2 + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 8;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " SUB ", index1 + HEAP_MEMORY_OFFSET);
+
+                            code.current_pos += 7;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " JNEG ",  \
+                                    src_lines[jump_line - 1].code_begining_pos);
+                            code.current_pos += 6;
+                            while (jump_line)
+                            {
+                                jump_line /= 10;
+                                code.current_pos++;
+                            } 
+                            line_num++;
+                        }
+                        break;
+
+                    case '<':  // v1 = v2 -> JNEG
+                        if (*val2 == '0')
+                        {
+                            CHEK_VARIABLE(val1)
+                            int index = index_of_var(*val1);
+                            if (index == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val1);                       
+
+                                return EXIT_FAILURE;
+                            }
+
+                            SET_LINE_NUMBER
+                            src_lines[i].code_begining_pos = line_num++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 8;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " JNEG ",  \
+                                    src_lines[jump_line - 1].code_begining_pos);
+
+                            code.current_pos += 6;
+                            while (jump_line)
+                            {
+                                jump_line /= 10;
+                                code.current_pos++;
+                            } 
+                            line_num++;
+                        }
+                        else
+                        {
+                            CHEK_VARIABLE(val1)
+                            CHEK_VARIABLE(val1)
+                            int index1 = index_of_var(*val1);
+                            if (index1 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val1);                       
+
+                                return EXIT_FAILURE;
+                            }
+                            int index2 = index_of_var(*val2);
+                            if (index2 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%s\033[0m",  \
+                                        filename, src_lines[i].line_number, val2);                       
+
+                                return EXIT_FAILURE;
+                            }
+
+
+                            SET_LINE_NUMBER
+                            src_lines[i].code_begining_pos = line_num++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index1 + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 8;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " SUB ", index2 + HEAP_MEMORY_OFFSET);
+
+                            code.current_pos += 7;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " JNEG ",  \
+                                    src_lines[jump_line - 1].code_begining_pos);
+                            code.current_pos += 6;
+                            while (jump_line)
+                            {
+                                jump_line /= 10;
+                                code.current_pos++;
+                            } 
+                            line_num++;
+                        }
+                        break;    
+                    default:
+                        ERROR_MSG
+                        printf("%s: line %d: unknown sign: \033[1m%c\033[0m",  \
+                                filename, src_lines[i].line_number, *sign);                       
+
+                        return EXIT_FAILURE;
+                }
+            }
+            else
+            {
+                ERROR_MSG
+                printf("%s: line %d: only GOTO operation able in IF: \033[1m%s\033[0m",  \
+                        filename, src_lines[i].line_number, src_lines[i].args);                       
+
+                return EXIT_FAILURE;
+            }
+              
         }    
   
         result[code.current_pos++] = '\n';
@@ -518,14 +811,6 @@ int compile(char* result, int src_len, char* filename)
     DEBUG_ONLY(printf("\n Translation result: %s\n\n", result);)    
     return EXIT_SUCCESS;
 }
-
-
-
-
-
-
-
-
 
 
 
