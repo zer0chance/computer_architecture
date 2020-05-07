@@ -406,6 +406,10 @@ int CU()
             else sc_regSet(WRONG_OPCODE, 1);
             break;
 
+        case 12: // SET (to load directly to accumulator)
+            Accumulator = operand;
+            break;    
+
         case 20: // LOAD
             if (VALID_MEM(operand))
                 Accumulator = *(RAM + operand);

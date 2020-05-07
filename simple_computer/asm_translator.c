@@ -18,6 +18,8 @@ int get_command_num(const char* command_name)
         return 10;   
     if(!strcmp(command_name, "WRITE"))
         return 11;
+    if(!strcmp(command_name, "SET"))
+        return 12;    
     if(!strcmp(command_name, "LOAD"))
         return 20;  
     if(!strcmp(command_name, "STORE"))
