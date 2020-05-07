@@ -327,10 +327,10 @@ int compile(char* result, int src_len, char* filename)
         {
             SET_LINE_NUMBER
 
-            sprintf(&(result[code.current_pos]), "%s", " HALT");
+            sprintf(&(result[code.current_pos]), "%s", " HALT 0");
             src_lines[i].code_begining_pos = line_num++;
 
-            code.current_pos += 5;
+            code.current_pos += 6;
         }
              
 
@@ -806,7 +806,7 @@ int compile(char* result, int src_len, char* filename)
         result[code.current_pos++] = '\n';
     }
 
-    result[code.current_pos] = '\0';
+    result[--code.current_pos] = '\0';
 
     DEBUG_ONLY(printf("\n Translation result: %s\n\n", result);)    
     return EXIT_SUCCESS;

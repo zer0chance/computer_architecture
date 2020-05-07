@@ -112,9 +112,11 @@ int interpreter(char* filename)
     uint16_t error_flag = 0;
     uint16_t current_line_number = 1;
     char line[LINE_MAX_LENGTH];
-
+    
 	while (fgets(line, LINE_MAX_LENGTH, fd) != NULL)
     {
+        DEBUG_ONLY(printf("Line: %s\n", line);) 
+
         char* token = strtok(line, " ");
 
         int mem_location = (int)strtol(token, NULL, 10); 
@@ -133,7 +135,8 @@ int interpreter(char* filename)
         int command_num = get_command_num(command_name);
         if(command_num)
         {
-            DEBUG_ONLY(printf("%d\n%s\n%d\n\n", mem_location, command_name, operand);)
+            DEBUG_ONLY(printf(" RAM pos: %d\n Command: %s\n Operand: %d\n\n",   \
+                        mem_location, command_name, operand);)
             if(!error_flag) sc_commandEncode(command_num, operand, (RAM + mem_location));
         }
         else
@@ -158,7 +161,7 @@ int interpreter(char* filename)
 int main(int argc, char** argv)
 {
     char* filename = argv[1]; 
-
+    
     sc_memoryInit();
     if(interpreter(filename))
     {
