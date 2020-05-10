@@ -589,14 +589,10 @@ int main()
     nval.it_value.tv_sec = 1;
     nval.it_value.tv_usec = 0;
 
-    // setitimer(ITIMER_REAL, &nval, &oval);
-
     int new_ic;
     char ch;
     for(;;)
     {
-        //sc_regSet(CLOCK_IGNORE, 0);
-        
         print_term();
         fflush(stdout);
         read(0, &ch, 1);
@@ -658,8 +654,6 @@ int main()
                 printf(" Invalid button fn %c!", ch);    
             }
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
-            // setitimer(ITIMER_REAL, &nval, &oval);
-            // signal(SIGALRM, signalhandler_timer);
         }
 
         if(ch == 'k')
@@ -668,11 +662,7 @@ int main()
             sc_regSet(CLOCK_IGNORE, 1);
             print_term();
             
-            if (mpos_y < 57) mpos_y += 6;
-
-            // signal(SIGALRM, signalhandler_timer);
-            // setitimer(ITIMER_REAL, &nval, &oval);
-            // sc_regSet(CLOCK_IGNORE, 0);    
+            if (mpos_y < 57) mpos_y += 6;   
         }
 
         if(ch == 'g')
@@ -682,10 +672,6 @@ int main()
             print_term();
             
             if (mpos_y > 3) mpos_y -= 6;
-
-            // signal(SIGALRM, signalhandler_timer);
-            // setitimer(ITIMER_REAL, &nval, &oval);
-            // sc_regSet(CLOCK_IGNORE, 0);
         }
 
         if(ch == 'h')
@@ -695,10 +681,6 @@ int main()
             print_term();
             
             if (mpos_x < 14) mpos_x++;
-
-            // signal(SIGALRM, signalhandler_timer);
-            // setitimer(ITIMER_REAL, &nval, &oval);
-            // sc_regSet(CLOCK_IGNORE, 0);
         }
 
         if(ch == 'j')
@@ -708,10 +690,6 @@ int main()
             print_term();
             
             if (mpos_x > 5) mpos_x--;
-
-            // signal(SIGALRM, signalhandler_timer);
-            // setitimer(ITIMER_REAL, &nval, &oval);
-            // sc_regSet(CLOCK_IGNORE, 0);
         }
 
         if(ch == 's')
@@ -726,11 +704,7 @@ int main()
             printf("Save to file: ");
 
             scanf("%s", filename);
-            sc_memorySave(filename);
-
-            // rk_mytermregime(OFF, 0, 1, OFF, OFF);
-            // signal(SIGALRM, signalhandler_timer);
-            // setitimer(ITIMER_REAL, &nval, &oval);       
+            sc_memorySave(filename);      
         }
 
 
@@ -749,8 +723,6 @@ int main()
             sc_memoryLoad(filename);
 
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
-            // signal(SIGALRM, signalhandler_timer);
-            // setitimer(ITIMER_REAL, &nval, &oval);
         }
 
         if(ch == 'c')
@@ -765,8 +737,6 @@ int main()
 
             scanf("%hd", &(RAM[selected_pos]));
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
-            // signal(SIGALRM, signalhandler_timer);
-            // setitimer(ITIMER_REAL, &nval, &oval);
         }
 
         if(ch == 'i')
@@ -776,9 +746,6 @@ int main()
             print_term();
 
             raise(SIGUSR1);
-
-           // signal(SIGALRM, signalhandler_timer);
-           // setitimer(ITIMER_REAL, &nval, &oval);
         }
 
         ch = 0;
