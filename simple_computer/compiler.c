@@ -54,7 +54,7 @@
     }                                                   
 
 
-#define CHEK_VARIABLE(var) if (strlen(var) > 2)                                                 \
+#define CHECK_VARIABLE(var) if (strlen(var) > 2)                                                 \
     {                                                                                           \
         ERROR_MSG                                                                               \
         printf("%s: line %d: variable name can contain only one character: \033[1m%s\033[0m",   \
@@ -330,13 +330,13 @@ int compile(char* result, int src_len, char* filename)
             sprintf(&(result[code.current_pos]), "%s", " HALT 0");
             src_lines[i].code_begining_pos = line_num++;
 
-            code.current_pos += 6;
+            code.current_pos += 7;
         }
              
 
         else if (!strcmp(src_lines[i].operand, "INPUT"))
         {
-            CHEK_VARIABLE(src_lines[i].args)
+            CHECK_VARIABLE(src_lines[i].args)
 
             SET_LINE_NUMBER
 
@@ -357,7 +357,7 @@ int compile(char* result, int src_len, char* filename)
 
         else if (!strcmp(src_lines[i].operand, "OUTPUT"))
         {
-            CHEK_VARIABLE(src_lines[i].args)
+            CHECK_VARIABLE(src_lines[i].args)
 
             SET_LINE_NUMBER
 
@@ -418,7 +418,7 @@ int compile(char* result, int src_len, char* filename)
 
             char* variable_name = strtok(args, " ");
 
-            CHEK_VARIABLE(variable_name)
+            CHECK_VARIABLE(variable_name)
 
             SET_LINE_NUMBER
             src_lines[i].code_begining_pos = line_num++;
@@ -520,7 +520,7 @@ int compile(char* result, int src_len, char* filename)
                     case '=':  // v1 - v2 LOAD v1  SUB v2 JZ jump_line       
                         if (*val2 == '0')
                         {
-                            CHEK_VARIABLE(val1)
+                            CHECK_VARIABLE(val1)
                             int index = index_of_var(*val1);
                             if (index == -1)
                             {
@@ -554,8 +554,8 @@ int compile(char* result, int src_len, char* filename)
                         }
                         else
                         {
-                            CHEK_VARIABLE(val1)
-                            CHEK_VARIABLE(val1)
+                            CHECK_VARIABLE(val1)
+                            CHECK_VARIABLE(val2)
                             int index1 = index_of_var(*val1);
                             if (index1 == -1)
                             {
@@ -589,6 +589,7 @@ int compile(char* result, int src_len, char* filename)
                             sprintf(&(result[code.current_pos]), "%s%d", " SUB ", index2 + HEAP_MEMORY_OFFSET);
 
                             code.current_pos += 7;
+                            line_num++;
                         
                             result[code.current_pos++] = '\n';
 
@@ -610,7 +611,7 @@ int compile(char* result, int src_len, char* filename)
                     case '>':  // v2 - v1 -> JNEG
                         if (*val2 == '0')
                         {
-                            CHEK_VARIABLE(val1)
+                            CHECK_VARIABLE(val1)
                             int index = index_of_var(*val1);
                             if (index == -1)
                             {
@@ -644,8 +645,8 @@ int compile(char* result, int src_len, char* filename)
                         }
                         else
                         {
-                            CHEK_VARIABLE(val1)
-                            CHEK_VARIABLE(val1)
+                            CHECK_VARIABLE(val1)
+                            CHECK_VARIABLE(val2)
                             int index1 = index_of_var(*val1);
                             if (index1 == -1)
                             {
@@ -679,7 +680,8 @@ int compile(char* result, int src_len, char* filename)
                             sprintf(&(result[code.current_pos]), "%s%d", " SUB ", index1 + HEAP_MEMORY_OFFSET);
 
                             code.current_pos += 7;
-                        
+                            line_num++;
+
                             result[code.current_pos++] = '\n';
 
                             SET_LINE_NUMBER
@@ -699,7 +701,7 @@ int compile(char* result, int src_len, char* filename)
                     case '<':  // v1 = v2 -> JNEG
                         if (*val2 == '0')
                         {
-                            CHEK_VARIABLE(val1)
+                            CHECK_VARIABLE(val1)
                             int index = index_of_var(*val1);
                             if (index == -1)
                             {
@@ -733,8 +735,8 @@ int compile(char* result, int src_len, char* filename)
                         }
                         else
                         {
-                            CHEK_VARIABLE(val1)
-                            CHEK_VARIABLE(val1)
+                            CHECK_VARIABLE(val1)
+                            CHECK_VARIABLE(val2)
                             int index1 = index_of_var(*val1);
                             if (index1 == -1)
                             {
@@ -771,6 +773,7 @@ int compile(char* result, int src_len, char* filename)
                         
                             result[code.current_pos++] = '\n';
 
+                            line_num++;
                             SET_LINE_NUMBER
 
                             sprintf(&(result[code.current_pos]), "%s%d", " JNEG ",  \

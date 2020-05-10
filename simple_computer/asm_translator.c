@@ -45,7 +45,7 @@ int get_command_num(const char* command_name)
     if(!strcmp(command_name, "MOVA"))
         return 71;
     if(!strcmp(command_name, "MOVR"))
-        return 71;
+        return 72;
     if(!strcmp(command_name, "MOVCA"))
         return 73;               
     if(!strcmp(command_name, "MOVCR"))
@@ -135,8 +135,8 @@ int interpreter(char* filename)
         int command_num = get_command_num(command_name);
         if(command_num)
         {
-            DEBUG_ONLY(printf(" RAM pos: %d\n Command: %s\n Operand: %d\n\n",   \
-                        mem_location, command_name, operand);)
+            DEBUG_ONLY(printf(" RAM pos: %d\n Command: %d\n Operand: %d\n\n",   \
+                        mem_location, command_num, operand);)
             if(!error_flag) sc_commandEncode(command_num, operand, (RAM + mem_location));
         }
         else

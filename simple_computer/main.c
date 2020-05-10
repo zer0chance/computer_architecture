@@ -4,7 +4,7 @@
 #include "myTerm.h"
 #include "mySimpleComputer.h"
  
-#define VALID_MEM(a) (a > 0) ? ((a < 100) ? 1 : 0) : 0
+#define VALID_MEM(a) (a >= 0) ? ((a < 100) ? 1 : 0) : 0
 #define EVEN(a) (a % 2 == 0) ? 1 : 0
 #define ODD(a) (a % 2 == 0) ? 0 : 1
 
@@ -424,27 +424,29 @@ int CU()
 
         case 40: // JUMP
             if (VALID_MEM(operand))
-                IC = operand;
+            {
+                IC = operand - 1; 
+            }  
             else sc_regSet(WRONG_OPCODE, 1);
-            return EXIT_SUCCESS;
+            break;
         
         case 41: // JNEG
             if (VALID_MEM(operand))
             {
-                if (Accumulator < 0)
-                    IC = operand;
+                if (Accumulator < 0) 
+                    IC = operand - 1;  
             }    
             else sc_regSet(WRONG_OPCODE, 1);
-            return EXIT_SUCCESS;
+            break;
 
         case 42: // JZ
             if (VALID_MEM(operand))
             {
-                if (Accumulator == 0)
-                    IC = operand;
+                if (Accumulator == 0) 
+                    IC = operand - 1;  
             }    
             else sc_regSet(WRONG_OPCODE, 1);
-            return EXIT_SUCCESS;
+            break;
             
         case 43: // HALT
             // signal(SIGALRM, SIG_IGN);  
@@ -458,48 +460,48 @@ int CU()
             if (VALID_MEM(operand))
             {
                 if (Accumulator > 0)
-                    IC = operand;
+                    IC = operand - 1;
             }    
             else sc_regSet(WRONG_OPCODE, 1);
-            return EXIT_SUCCESS;
+            break;
         
         case 56: // JC
             if (VALID_MEM(operand))
             {
                 sc_regGet(OP_OVERFLOW, &flag);
                 if (flag)
-                    IC = operand;
+                    IC = operand - 1;
             }    
             else sc_regSet(WRONG_OPCODE, 1);
-            return EXIT_SUCCESS;
+            break;
 
         case 57: // JNC
             if (VALID_MEM(operand))
             {
                 sc_regGet(OP_OVERFLOW, &flag);
                 if (!flag)
-                    IC = operand;
+                    IC = operand - 1;
             }    
             else sc_regSet(WRONG_OPCODE, 1);
-            return EXIT_SUCCESS;
+            break;
 
         case 58: // JP
             if (VALID_MEM(operand))
             {
                 if (EVEN(Accumulator))
-                    IC = operand;
+                    IC = operand - 1;
             }    
             else sc_regSet(WRONG_OPCODE, 1);
-            return EXIT_SUCCESS;
+            break;
 
         case 59: // JNP
             if (VALID_MEM(operand))
             {
                 if (ODD(Accumulator))
-                    IC = operand;
+                    IC = operand - 1;
             }    
             else sc_regSet(WRONG_OPCODE, 1);
-            return EXIT_SUCCESS;
+            break;
 
         case 71: // MOVA
             if (VALID_MEM(operand) && VALID_MEM(Accumulator))
@@ -541,11 +543,11 @@ int CU()
             break;    
     }
 
-    signal(SIGALRM, signalhandler_timer);
-    setitimer(ITIMER_REAL, &nval, &oval);
-
     if (IC == 99) IC = 0;
     else IC++;
+
+    signal(SIGALRM, signalhandler_timer);
+    setitimer(ITIMER_REAL, &nval, &oval);   
 
     return EXIT_SUCCESS;
 }
@@ -561,14 +563,20 @@ int main()
 #ifdef DEBUG    
     /////// Presets ///////
      
+    // sc_commandEncode(10, 10, RAM);
+    // sc_commandEncode(11, 10, (RAM + 1));
+    // sc_commandEncode(20, 10, (RAM + 2));
+    // sc_commandEncode(21, 11, (RAM + 3));
+    // sc_commandEncode(40, 99, (RAM + 4));
+    // sc_commandEncode(42, 99, (RAM + 12));
+    // sc_commandEncode(40, 0, (RAM + 13));
+    // sc_commandEncode(43, 0, (RAM + 99));
+
     sc_commandEncode(10, 10, RAM);
-    sc_commandEncode(11, 10, (RAM + 1));
-    sc_commandEncode(20, 10, (RAM + 2));
-    sc_commandEncode(21, 11, (RAM + 3));
-    sc_commandEncode(40, 99, (RAM + 4));
-    sc_commandEncode(42, 99, (RAM + 12));
-    sc_commandEncode(40, 0, (RAM + 13));
-    sc_commandEncode(43, 0, (RAM + 99));
+    sc_commandEncode(20, 10, (RAM + 1));
+    sc_commandEncode(41, 0, (RAM + 2));
+    sc_commandEncode(40, 99, (RAM + 3));
+    sc_commandEncode(43, 0, (RAM + 99));    
 
     ///////////////////////
 #endif
@@ -627,7 +635,7 @@ int main()
                 rk_mytermrestore();
                 printf("Accumulator value: ");
                 fflush(stdout);
-                scanf("%d", &Accumulator);
+                scanf("%hd", &Accumulator);
                 break;
             case 55:    // F6
                 mt_gotoXY(input_x++, input_y);

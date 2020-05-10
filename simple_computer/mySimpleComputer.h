@@ -8,9 +8,9 @@
 #define OPERAND 0x7f        //             1111111
 
 uint8_t FLAGS;
-uint16_t RAM[RAM_MAX_SIZE];
+int16_t RAM[RAM_MAX_SIZE];
 uint16_t IC = 0;
-int32_t Accumulator = 0;
+int16_t Accumulator = 0;
 
 enum
 {
@@ -171,14 +171,14 @@ int sc_regGet(int reg, int* value)
 }
 
 
-int sc_commandEncode(uint16_t command_num, uint16_t operand, uint16_t* value) // TODO: handle exeptions
+int sc_commandEncode(uint16_t command_num, uint16_t operand, int16_t* value) // TODO: handle exeptions
 {
     *value = (COMMAND | (command_num << 7)) | operand;
     return EXIT_SUCCESS;
 }
 
 
-int sc_commandDecode(uint16_t value, uint16_t* command_num, uint16_t* operand) // TODO: handle exeptions
+int sc_commandDecode(int16_t value, uint16_t* command_num, uint16_t* operand) // TODO: handle exeptions
 {
     *command_num = (value & COMMAND_NUM) >> 7;
     *operand = value & OPERAND;
