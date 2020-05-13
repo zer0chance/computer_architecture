@@ -1,46 +1,20 @@
-#include <stdio.h>
-
-
-typedef struct CHS
-{
-    __uint8_t C : 2;
-    __uint8_t H : 2;
-    __uint8_t S : 2;
-} tCHS;
-
-
-typedef struct IDECHS
-{
-    __uint8_t C : 2;
-    __uint8_t H : 2;
-    __uint8_t S : 2;
-} tIDECHS;
-
-
-typedef struct LARGE
-{
-    __uint16_t C : 10;
-    __uint8_t  H : 6;
-    __uint8_t  S : 8;
-    __uint64_t adress;
-} tLARGE;
-
-
-void foo()
-{
-
-}
+#include "lab7.h"
 
 
 int main()  
 {
-    register tCHS d;
+    tIDECHS d;
 
-    d.C = 4;
-    d.H = 4;
-    d.S = 4;
+    printf("\n Heads: ");
+    scanf("%hd", &d.H);
+    printf("\n Cylinders: ");
+    scanf("%hd", &d.C);
+    printf("\n Sectors: ");
+    scanf("%hd", &d.S);
 
-    printf("\n C: %d\n H: %d\n S: %d\n\n", d.C, d.H, d.S);
+    set_idechs_capacity(&d); 
+
+    printf("\n C: %hd H: %hd S: %hd\n Capacity: %.3lf\n\n", d.C, d.H, d.S, d.capacity );
 
     return 0;
 }

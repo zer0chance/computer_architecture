@@ -14,6 +14,7 @@
 #define SRC_MAX_LINES 30
 #define SRC_LINE_MAX_LENGTH 50
 #define HEAP_MEMORY_OFFSET 70
+#define FRAME_BUFFER_OFFSET 90
 
 
 #define SET_LINE_NUMBER src_lines[i].code_begining_pos = line_num;  \
@@ -54,7 +55,7 @@
     }                                                   
 
 
-#define CHECK_VARIABLE(var) if (strlen(var) > 2)                                                 \
+#define CHECK_VARIABLE(var) if (strlen(var) > 2)                                                \
     {                                                                                           \
         ERROR_MSG                                                                               \
         printf("%s: line %d: variable name can contain only one character: \033[1m%s\033[0m",   \
@@ -73,8 +74,11 @@ struct __code_segment
 {
     uint8_t current_pos;
 
-    char variables[30];
-    uint8_t current_var_index;      
+    char variables[20];
+    uint8_t current_var_index; 
+
+    char frames[10]; 
+    char current_frame;   
 } code;
 
 
@@ -311,10 +315,150 @@ int contain_variable(const char* expr)                  //  0 - not contain
 }
 
 
+int polish_revert_notation(char* expr, char* result)
+{
+    char* stack = (char *) calloc(20, sizeof(char));
+    int res_pos = 0;
+    int stack_pos = 0;
+
+    while (*expr != '\0')
+    {
+        if (*expr == ' '  || *expr == '\n') {
+            expr++;
+        } else if (isalpha(*expr)) {
+            if (islower(*expr))
+            {
+                ERROR_MSG                                                                               
+                printf("unknown symbol: \033[1m%c\033[0m", *expr);                                    
+                return EXIT_FAILURE;  
+            } else if (isalpha(*(expr + 1))) {
+                ERROR_MSG                                                                               
+                printf("unknown symbol: \033[1m%c\033[0m", *expr);                                       
+                return EXIT_FAILURE; 
+            }
+            else
+            {
+                result[res_pos++] = *expr;
+                expr++;
+            }
+        } else if (isdigit(*expr)) {
+            result[res_pos++] = *expr;
+            expr++;
+        } else {   
+            switch (*expr)
+            {  
+            case '+':
+                if ((res_pos == 0 && stack_pos == 0)  || stack_pos == 0 || stack[stack_pos - 1] == '(')
+                {
+                    stack[stack_pos++] = *expr;
+                    expr++;
+                } else {
+                    result[res_pos++] = stack[--stack_pos];
+                }
+                break;
+            case '-':
+                if ((res_pos == 0 && stack_pos == 0)  || stack_pos == 0 || stack[stack_pos - 1] == '(')
+                {
+                    stack[stack_pos++] = *expr;
+                    expr++;
+                } else {
+                    result[res_pos++] = stack[--stack_pos];
+                }
+                break;
+            case '/':
+                if (stack_pos == 0)
+                {
+                    stack[stack_pos++] = *expr;
+                    expr++;
+                } else if (stack[stack_pos - 1] != '*') {
+                    stack[stack_pos++] = *expr;
+                    expr++;
+                } else {
+                    result[res_pos++] = stack[--stack_pos];
+                }
+                break;
+            case '*':
+                if (stack_pos == 0)
+                {
+                    stack[stack_pos++] = *expr;
+                    expr++;
+                } else if (stack[stack_pos - 1] != '/')
+                {
+                    stack[stack_pos++] = *expr;
+                    expr++;
+                } else {
+                    result[res_pos++] = stack[--stack_pos];
+                }
+                break;  
+            case '(':
+                stack[stack_pos++] = *expr;
+                expr++;
+                break;
+            case ')':
+                while (stack[--stack_pos] != '(')
+                {
+                    result[res_pos++] = stack[stack_pos];
+                }
+                stack_pos--;
+                expr++;
+                break;                  
+            default:
+                ERROR_MSG
+                printf("unknown symbol: \033[1m%c\033[0m", *expr);
+                return EXIT_FAILURE; 
+            }
+        }
+    }
+
+    while (stack_pos >= 0)
+    {
+        result[res_pos++] = stack[--stack_pos];
+    }
+    
+    result[res_pos] = '\0';
+    DEBUG_ONLY(printf("Polish notation: %s\n", result));
+    return EXIT_SUCCESS;
+}
+
+
+void update_result(char* result, int pos)
+{
+    DEBUG_ONLY(printf("\nWas: %s", result);)
+    char* tmp = (char *) calloc(strlen(result), sizeof(char));
+
+    int i = 0;
+    while (result[i] != '\0')
+    {   
+        if (i == pos - 2)
+        {
+            tmp[i] = code.current_frame - 1;
+            i += 3;
+        }
+        else 
+        {
+            tmp[i] = result[i];
+            i++;
+        }
+    }
+    tmp[i] = '\0';
+    i = 0;
+
+    while (tmp[i] != '\0')
+    {
+        result[i] = tmp[i];
+        i++;
+    }
+    result[i] = '\0';
+    free(tmp);
+    DEBUG_ONLY(printf("\nBecome: %s\n\n", result);)
+}
+
+
 int compile(char* result, int src_len, char* filename)
 {
     code.current_pos = 0;
     code.current_var_index = 0;
+    code.current_frame = 'a';
 
     uint16_t line_num = 0;
 
@@ -463,7 +607,315 @@ int compile(char* result, int src_len, char* filename)
             } 
             else if (chek == 1)
             {
-                // TODO with RPN
+                char* expr_result = (char *) calloc(20, sizeof(char));
+                
+                if(!polish_revert_notation(expr, expr_result))
+                {
+                    int pos = 0;
+                    while (expr_result[pos] != '\0')
+                    {
+                        if (!isoperation(expr_result[pos]))
+                        {
+                            pos++;
+                            continue;
+                        }
+                        
+                        if (pos < 2)
+                        {
+                            ERROR_MSG
+                            printf("%s: line %d: wrong expression: \033[1m%s\033[0m", \
+                            filename, src_lines[i].line_number, expr);                                    
+
+                            return EXIT_FAILURE;
+                        }
+
+                        char val1 = expr_result[pos - 1];
+                        char val2 = expr_result[pos - 2];
+
+                        if (isalpha(val1) && isalpha(val2))
+                        {
+                            int index1 = index_of_var(val1);
+                            if (index1 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%c\033[0m",  \
+                                        filename, src_lines[i].line_number, val1);                       
+
+                                return EXIT_FAILURE;
+                            }
+                            int index2 = index_of_var(val2);
+                            if (index2 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%c\033[0m",  \
+                                        filename, src_lines[i].line_number, val2);                       
+
+                                return EXIT_FAILURE;
+                            }
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index2 + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 8;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            switch (expr_result[pos])
+                            {
+                            case '+':
+                                sprintf(&(result[code.current_pos]), "%s%d", " ADD ", index1 + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            case '-':
+                                sprintf(&(result[code.current_pos]), "%s%d", " SUB ", index1 + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            case '*':
+                                sprintf(&(result[code.current_pos]), "%s%d", " MUL ", index1 + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            case '/':
+                                sprintf(&(result[code.current_pos]), "%s%d", " DIVIDE ", index1 + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 10;
+                                break;
+
+                            default:
+                                ERROR_MSG
+                                printf("Oh shit man"); // ???????
+                                exit(0);
+                            }
+                            line_num++;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            int new_index = code.current_var_index;
+                            code.variables[code.current_var_index++] = code.current_frame++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " STORE ", new_index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 9;
+                            line_num++;
+
+                            update_result(expr_result, pos);
+                            pos = 0;
+                        } 
+                        else if (isdigit(val1) && isalpha(val2)) 
+                        {
+                            int index1 = index_of_var(val2);
+                            if (index1 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%c\033[0m",  \
+                                        filename, src_lines[i].line_number, val2);                       
+
+                                return EXIT_FAILURE;
+                            }
+                            
+                            sprintf(&(result[code.current_pos]), "%s%d", " SET ", val1 - 48);
+                            code.current_pos += 6;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            int temp_index = code.current_var_index;
+                            code.variables[code.current_var_index++] = code.current_frame++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " STORE ", temp_index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 9;
+                            line_num++;
+
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index1 + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 8;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+                            
+                            switch (expr_result[pos])
+                            {
+                            case '*':
+                                sprintf(&(result[code.current_pos]), "%s%d", " MUL ", temp_index + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            case '/':
+                                sprintf(&(result[code.current_pos]), "%s%d", " DIVIDE ", temp_index + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 10;
+                                break;
+                            
+                            case '+':
+                                sprintf(&(result[code.current_pos]), "%s%d", " ADD ", temp_index + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            case '-':
+                                sprintf(&(result[code.current_pos]), "%s%d", " SUB ", temp_index + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            
+
+                            default:
+                                ERROR_MSG
+                                printf("Oh shit man"); // ???????
+                                exit(0);
+                            }
+                            line_num++;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            int new_index = code.current_var_index;
+                            code.variables[code.current_var_index++] = code.current_frame++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " STORE ", new_index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 9;
+                            line_num++;
+
+                            update_result(expr_result, pos);
+                            pos = 0;
+                        } 
+                        else if (isalpha(val1) && isdigit(val2)) 
+                        {
+                            int index1 = index_of_var(val1);
+                            if (index1 == -1)
+                            {
+                                ERROR_MSG
+                                printf("%s: line %d: uninitialized variable: \033[1m%c\033[0m",  \
+                                        filename, src_lines[i].line_number, val1);                       
+
+                                return EXIT_FAILURE;
+                            }
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " SET ", val2 - 48);
+                            code.current_pos += 6;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            switch (expr_result[pos])
+                            {
+                            case '+':
+                                sprintf(&(result[code.current_pos]), "%s%d", " ADD ", index1 + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            case '-':
+                                sprintf(&(result[code.current_pos]), "%s%d", " SUB ", index1 + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            case '*':
+                                sprintf(&(result[code.current_pos]), "%s%d", " MUL ", index1 + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 7;
+                                break;
+
+                            case '/':
+                                sprintf(&(result[code.current_pos]), "%s%d", " DIVIDE ", index1 + HEAP_MEMORY_OFFSET);
+                                code.current_pos += 10;
+                                break;
+
+                            default:
+                                ERROR_MSG
+                                printf("Oh shit man"); // ???????
+                                exit(0);
+                            }
+                            line_num++;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            int new_index = code.current_var_index;
+                            code.variables[code.current_var_index++] = code.current_frame++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " STORE ", new_index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 9;
+                            line_num++;
+
+                            update_result(expr_result, pos);
+                            pos = 0;
+                        }    
+                        else if (isdigit(val1) && isdigit(val2)) 
+                        {
+                            int dig1 = val2 - 48;
+                            int dig2 = val1 - 48;
+                            int res;
+
+                            switch (expr_result[pos])
+                            {
+                            case '+':
+                                res = dig1 + dig2;
+                                break;
+
+                            case '-':
+                                res = dig1 - dig2;
+                                break;
+
+                            case '*':
+                                res = dig1 * dig2;
+                                break;
+
+                            case '/':
+                                res = dig1 / dig2;
+                                break;
+
+                            default:
+                                ERROR_MSG
+                                printf("Oh shit man"); // ???????
+                                exit(0);
+                            }
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " SET ", res);
+                            code.current_pos += 6;
+                        
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            int new_index = code.current_var_index;
+                            code.variables[code.current_var_index++] = code.current_frame++;
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " STORE ", new_index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 9;
+                            line_num++;
+
+                            update_result(expr_result, pos);
+                            pos = 0;
+                        }    
+            
+                        if (expr_result[1] != '\0')
+                        {
+                            ERROR_MSG
+                            printf("%s: line %d: wrong expression: \033[1m%s\033[0m", \
+                            filename, src_lines[i].line_number, expr);                                    
+
+                            return EXIT_FAILURE;
+                        }
+                        else
+                        {
+                            result[code.current_pos++] = '\n';
+
+                            SET_LINE_NUMBER
+
+                            sprintf(&(result[code.current_pos]), "%s%d", " STORE ", index + HEAP_MEMORY_OFFSET);
+                            code.current_pos += 9;
+                            line_num++;
+                        }
+                    }
+                }    
+                else return EXIT_FAILURE;    
             }
             else if (chek == -1)
             {
@@ -811,7 +1263,7 @@ int compile(char* result, int src_len, char* filename)
 
     result[--code.current_pos] = '\0';
 
-    DEBUG_ONLY(printf("\n Translation result: %s\n\n", result);)    
+    DEBUG_ONLY(printf("\n Translation result:\n%s\n\n", result);)    
     return EXIT_SUCCESS;
 }
 
@@ -877,13 +1329,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
-// Example:
-
-// 01 REM It is comment
-// 02 INPUT A
-// 03 INPUT B
-// 04 LET C = A – B 
-// 05 IF C < 0 GOTO 20 
-// 06 OUTPUT C
-// 07 END
