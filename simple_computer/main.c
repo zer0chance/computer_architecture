@@ -572,11 +572,13 @@ int main()
     // sc_commandEncode(40, 0, (RAM + 13));
     // sc_commandEncode(43, 0, (RAM + 99));
 
-    sc_commandEncode(10, 10, RAM);
-    sc_commandEncode(20, 10, (RAM + 1));
-    sc_commandEncode(41, 0, (RAM + 2));
-    sc_commandEncode(40, 99, (RAM + 3));
-    sc_commandEncode(43, 0, (RAM + 99));    
+    RAM[70] = 3;
+    RAM[71] = 1;
+    sc_commandEncode(20, 71, RAM + 15);
+    sc_commandEncode(31, 70, RAM + 16);
+    // sc_commandEncode(41, 0, (RAM + 2));
+    // sc_commandEncode(40, 99, (RAM + 3));
+    // sc_commandEncode(43, 0, (RAM + 99));    
 
     ///////////////////////
 #endif

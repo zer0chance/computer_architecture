@@ -17,9 +17,9 @@
 #define FRAME_BUFFER_OFFSET 90
 
 
-#define SET_LINE_NUMBER src_lines[i].code_begining_pos = line_num;  \
+#define SET_LINE_NUMBER /*src_lines[i].code_begining_pos = line_num;*/  \
     if (line_num < 10) {                                            \
-            result[code.current_pos++] = '0';                       \
+        result[code.current_pos++] = '0';                           \
         sprintf(&(result[code.current_pos++]), "%d", line_num);     \
     } else {                                                        \
         sprintf(&(result[code.current_pos]), "%d", line_num);       \
@@ -131,7 +131,6 @@ int parse_src(char* filename)
     {
         DEBUG_ONLY(printf(" %s\n", src_lines[line_num].line);)
         char* line = src_lines[line_num].line;
-        DEBUG_ONLY(printf(" %s\n", line);)
 
         char* number = strtok(line, " "); 
 
@@ -162,7 +161,7 @@ int parse_src(char* filename)
 
 
     int lines_amount = line_num;
-    DEBUG_ONLY(printf("\n\nLINES: %d \n\n", lines_amount);)
+    DEBUG_ONLY(printf("\nLINES: %d \n\n", lines_amount);)
 
     for (int i = 0; i < lines_amount - 1; i++)
     {
@@ -348,21 +347,29 @@ int polish_revert_notation(char* expr, char* result)
             switch (*expr)
             {  
             case '+':
-                if ((res_pos == 0 && stack_pos == 0)  || stack_pos == 0 || stack[stack_pos - 1] == '(')
+                if (stack_pos == 0) 
                 {
                     stack[stack_pos++] = *expr;
                     expr++;
+                } else if (stack[stack_pos - 1] == '(') {
+                    stack[stack_pos++] = *expr;
+                    expr++;
                 } else {
-                    result[res_pos++] = stack[--stack_pos];
+                    result[res_pos++] = stack[stack_pos - 1];
+                    stack_pos--;
                 }
                 break;
             case '-':
-                if ((res_pos == 0 && stack_pos == 0)  || stack_pos == 0 || stack[stack_pos - 1] == '(')
+                if (stack_pos == 0) 
                 {
                     stack[stack_pos++] = *expr;
                     expr++;
+                } else if (stack[stack_pos - 1] == '(') {
+                    stack[stack_pos++] = *expr;
+                    expr++;
                 } else {
-                    result[res_pos++] = stack[--stack_pos];
+                    result[res_pos++] = stack[stack_pos - 1];
+                    stack_pos--;
                 }
                 break;
             case '/':
@@ -374,7 +381,8 @@ int polish_revert_notation(char* expr, char* result)
                     stack[stack_pos++] = *expr;
                     expr++;
                 } else {
-                    result[res_pos++] = stack[--stack_pos];
+                    result[res_pos++] = stack[stack_pos - 1];
+                    stack_pos--;
                 }
                 break;
             case '*':
@@ -387,7 +395,8 @@ int polish_revert_notation(char* expr, char* result)
                     stack[stack_pos++] = *expr;
                     expr++;
                 } else {
-                    result[res_pos++] = stack[--stack_pos];
+                    result[res_pos++] = stack[stack_pos - 1];
+                    stack_pos--;
                 }
                 break;  
             case '(':
@@ -395,11 +404,13 @@ int polish_revert_notation(char* expr, char* result)
                 expr++;
                 break;
             case ')':
-                while (stack[--stack_pos] != '(')
+                stack_pos--;
+                while (stack[stack_pos] != '(')
                 {
                     result[res_pos++] = stack[stack_pos];
+                    stack_pos--;
                 }
-                stack_pos--;
+                
                 expr++;
                 break;                  
             default:
@@ -410,47 +421,45 @@ int polish_revert_notation(char* expr, char* result)
         }
     }
 
-    while (stack_pos >= 0)
+    for(int i = stack_pos - 1; i > -1; i--)
     {
-        result[res_pos++] = stack[--stack_pos];
+        result[res_pos++] = stack[i];
     }
     
     result[res_pos] = '\0';
-    DEBUG_ONLY(printf("Polish notation: %s\n", result));
+    printf("Polish notation: %s\n", result);
     return EXIT_SUCCESS;
 }
 
 
-void update_result(char* result, int pos)
+void update_result(char* res, int pos)
 {
-    DEBUG_ONLY(printf("\nWas: %s", result);)
-    char* tmp = (char *) calloc(strlen(result), sizeof(char));
+    DEBUG_ONLY(printf("\nWas: %s", res);)
+    char* tmp = (char *) calloc(strlen(res), sizeof(char));
 
     int i = 0;
-    while (result[i] != '\0')
+    int j = 0;
+    while (res[i] != '\0')
     {   
         if (i == pos - 2)
         {
-            tmp[i] = code.current_frame - 1;
+            tmp[j] = code.current_frame - 1;
             i += 3;
+            j++;
         }
         else 
         {
-            tmp[i] = result[i];
+            tmp[j] = res[i];
             i++;
+            j++;
         }
     }
-    tmp[i] = '\0';
-    i = 0;
+    tmp[j] = '\0';
 
-    while (tmp[i] != '\0')
-    {
-        result[i] = tmp[i];
-        i++;
-    }
-    result[i] = '\0';
+    strcpy(res, tmp);
+
     free(tmp);
-    DEBUG_ONLY(printf("\nBecome: %s\n\n", result);)
+    DEBUG_ONLY(printf("\nBecome: %s\n\n", res);)
 }
 
 
@@ -472,8 +481,8 @@ int compile(char* result, int src_len, char* filename)
             SET_LINE_NUMBER
 
             sprintf(&(result[code.current_pos]), "%s", " HALT 0");
-            src_lines[i].code_begining_pos = line_num++;
-
+            src_lines[i].code_begining_pos = line_num;
+            line_num++;
             code.current_pos += 7;
         }
              
@@ -493,8 +502,8 @@ int compile(char* result, int src_len, char* filename)
             }
 
             sprintf(&(result[code.current_pos]), "%s%d", " READ ", index + HEAP_MEMORY_OFFSET);
-            src_lines[i].code_begining_pos = line_num++;
-
+            src_lines[i].code_begining_pos = line_num;
+            line_num++;
             code.current_pos += 8;
         }    
 
@@ -517,8 +526,8 @@ int compile(char* result, int src_len, char* filename)
             }
 
             sprintf(&(result[code.current_pos]), "%s%d", " WRITE ", index + HEAP_MEMORY_OFFSET);
-            src_lines[i].code_begining_pos = line_num++;
-
+            src_lines[i].code_begining_pos = line_num;
+            line_num++;
             code.current_pos += 9;
         }   
         
@@ -549,8 +558,8 @@ int compile(char* result, int src_len, char* filename)
             SET_LINE_NUMBER
 
             sprintf(&(result[code.current_pos]), "%s%d", " JUMP ", src_lines[jump_adress - 1].code_begining_pos);
-            src_lines[i].code_begining_pos = line_num++;
-
+            src_lines[i].code_begining_pos = line_num;
+            line_num++;
             code.current_pos += 8;
         }  
         
@@ -565,8 +574,8 @@ int compile(char* result, int src_len, char* filename)
             CHECK_VARIABLE(variable_name)
 
             SET_LINE_NUMBER
-            src_lines[i].code_begining_pos = line_num++;
-
+            src_lines[i].code_begining_pos = line_num;
+            line_num++;
             int index = index_of_var(variable_name[0]);
 
             if (index == -1)   // Not initialized yet
@@ -735,6 +744,7 @@ int compile(char* result, int src_len, char* filename)
 
                             sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index1 + HEAP_MEMORY_OFFSET);
                             code.current_pos += 8;
+                            line_num++;
                         
                             result[code.current_pos++] = '\n';
 
@@ -894,25 +904,25 @@ int compile(char* result, int src_len, char* filename)
                             update_result(expr_result, pos);
                             pos = 0;
                         }    
-            
-                        if (expr_result[1] != '\0')
-                        {
-                            ERROR_MSG
-                            printf("%s: line %d: wrong expression: \033[1m%s\033[0m", \
-                            filename, src_lines[i].line_number, expr);                                    
+                    }
+                       
+                    if (strlen(expr_result) > 2)
+                    {
+                        ERROR_MSG
+                        printf("%s: line %d: wrong expression: \033[1m%s\033[0m", \
+                        filename, src_lines[i].line_number, expr);                                    
 
-                            return EXIT_FAILURE;
-                        }
-                        else
-                        {
-                            result[code.current_pos++] = '\n';
+                        return EXIT_FAILURE;
+                    }
+                    else
+                    {
+                        result[code.current_pos++] = '\n';
 
-                            SET_LINE_NUMBER
+                        SET_LINE_NUMBER
 
-                            sprintf(&(result[code.current_pos]), "%s%d", " STORE ", index + HEAP_MEMORY_OFFSET);
-                            code.current_pos += 9;
-                            line_num++;
-                        }
+                        sprintf(&(result[code.current_pos]), "%s%d", " STORE ", index + HEAP_MEMORY_OFFSET);
+                        code.current_pos += 9;
+                        line_num++;
                     }
                 }    
                 else return EXIT_FAILURE;    
@@ -984,8 +994,9 @@ int compile(char* result, int src_len, char* filename)
                             }
 
                             SET_LINE_NUMBER
-                            src_lines[i].code_begining_pos = line_num++;
-
+            
+                            src_lines[i].code_begining_pos = line_num;
+                            line_num++;
                             sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index + HEAP_MEMORY_OFFSET);
                             code.current_pos += 8;
                         
@@ -996,12 +1007,10 @@ int compile(char* result, int src_len, char* filename)
                             sprintf(&(result[code.current_pos]), "%s%d", " JZ ",  \
                                     src_lines[jump_line - 1].code_begining_pos);
 
-                            code.current_pos += 4;
-                            while (jump_line)
-                            {
-                                jump_line /= 10;
-                                code.current_pos++;
-                            } 
+                            if (src_lines[jump_line - 1].code_begining_pos < 10)
+                                code.current_pos += 5;
+                            else 
+                                code.current_pos += 6;   
                             line_num++;
                         }
                         else
@@ -1029,8 +1038,9 @@ int compile(char* result, int src_len, char* filename)
 
 
                             SET_LINE_NUMBER
-                            src_lines[i].code_begining_pos = line_num++;
-
+            
+                            src_lines[i].code_begining_pos = line_num;
+                            line_num++;
                             sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index1 + HEAP_MEMORY_OFFSET);
                             code.current_pos += 8;
                         
@@ -1049,13 +1059,11 @@ int compile(char* result, int src_len, char* filename)
 
                             sprintf(&(result[code.current_pos]), "%s%d", " JZ ",  \
                                     src_lines[jump_line - 1].code_begining_pos);
-                            code.current_pos += 4;
-                            while (jump_line)
-                            {
-                                jump_line /= 10;
-                                code.current_pos++;
-                            } 
-                            line_num++;
+
+                            if (src_lines[jump_line - 1].code_begining_pos < 10)
+                                code.current_pos += 5;
+                            else 
+                                code.current_pos += 6;   
                         }
                         
                         break;
@@ -1075,8 +1083,9 @@ int compile(char* result, int src_len, char* filename)
                             }
 
                             SET_LINE_NUMBER
-                            src_lines[i].code_begining_pos = line_num++;
-
+            
+                            src_lines[i].code_begining_pos = line_num;
+                            line_num++;
                             sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index + HEAP_MEMORY_OFFSET);
                             code.current_pos += 8;
                         
@@ -1087,12 +1096,10 @@ int compile(char* result, int src_len, char* filename)
                             sprintf(&(result[code.current_pos]), "%s%d", " JNS ",  \
                                     src_lines[jump_line - 1].code_begining_pos);
 
-                            code.current_pos += 5;
-                            while (jump_line)
-                            {
-                                jump_line /= 10;
-                                code.current_pos++;
-                            } 
+                           if (src_lines[jump_line - 1].code_begining_pos < 10)
+                                code.current_pos += 6;
+                            else 
+                                code.current_pos += 7;   
                             line_num++;
                         }
                         else
@@ -1118,10 +1125,10 @@ int compile(char* result, int src_len, char* filename)
                                 return EXIT_FAILURE;
                             }
 
-
                             SET_LINE_NUMBER
-                            src_lines[i].code_begining_pos = line_num++;
-
+            
+                            src_lines[i].code_begining_pos = line_num;
+                            line_num++;
                             sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index2 + HEAP_MEMORY_OFFSET);
                             code.current_pos += 8;
                         
@@ -1140,12 +1147,10 @@ int compile(char* result, int src_len, char* filename)
 
                             sprintf(&(result[code.current_pos]), "%s%d", " JNEG ",  \
                                     src_lines[jump_line - 1].code_begining_pos);
-                            code.current_pos += 6;
-                            while (jump_line)
-                            {
-                                jump_line /= 10;
-                                code.current_pos++;
-                            } 
+                            if (src_lines[jump_line - 1].code_begining_pos < 10)
+                                code.current_pos += 7;
+                            else 
+                                code.current_pos += 8;   
                             line_num++;
                         }
                         break;
@@ -1165,8 +1170,9 @@ int compile(char* result, int src_len, char* filename)
                             }
 
                             SET_LINE_NUMBER
-                            src_lines[i].code_begining_pos = line_num++;
-
+            
+                            src_lines[i].code_begining_pos = line_num;
+                            line_num++;
                             sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index + HEAP_MEMORY_OFFSET);
                             code.current_pos += 8;
                         
@@ -1177,12 +1183,10 @@ int compile(char* result, int src_len, char* filename)
                             sprintf(&(result[code.current_pos]), "%s%d", " JNEG ",  \
                                     src_lines[jump_line - 1].code_begining_pos);
 
-                            code.current_pos += 6;
-                            while (jump_line)
-                            {
-                                jump_line /= 10;
-                                code.current_pos++;
-                            } 
+                            if (src_lines[jump_line - 1].code_begining_pos < 10)
+                                code.current_pos += 7;
+                            else 
+                                code.current_pos += 8;   
                             line_num++;
                         }
                         else
@@ -1210,8 +1214,9 @@ int compile(char* result, int src_len, char* filename)
 
 
                             SET_LINE_NUMBER
-                            src_lines[i].code_begining_pos = line_num++;
-
+            
+                            src_lines[i].code_begining_pos = line_num;
+                            line_num++;
                             sprintf(&(result[code.current_pos]), "%s%d", " LOAD ", index1 + HEAP_MEMORY_OFFSET);
                             code.current_pos += 8;
                         
@@ -1230,12 +1235,12 @@ int compile(char* result, int src_len, char* filename)
 
                             sprintf(&(result[code.current_pos]), "%s%d", " JNEG ",  \
                                     src_lines[jump_line - 1].code_begining_pos);
-                            code.current_pos += 6;
-                            while (jump_line)
-                            {
-                                jump_line /= 10;
-                                code.current_pos++;
-                            } 
+                            
+                            if (src_lines[jump_line - 1].code_begining_pos < 10)
+                                code.current_pos += 7;
+                            else 
+                                code.current_pos += 8;    
+
                             line_num++;
                         }
                         break;    
@@ -1274,17 +1279,6 @@ int main(int argc, char** argv)
     char* filename = argv[1]; 
 
     int src_len = parse_src(filename);
-    
-#ifdef DEBUG
-    for (int i = 0; i < src_len; i++)
-    {
-        if(src_lines[i].operand != NULL)
-            printf(" Line num: %d\n Operand: %s \n Args: %s\n\n",   \
-                    src_lines[i].line_number,                       \
-                    src_lines[i].operand,                           \
-                    src_lines[i].args);                             \
-    }    
-#endif
 
     if(src_len < 0) {
         printf("\nCompilation: \033[31;1mfailed\033[0m\nexit code: %d\n", src_len);
@@ -1326,6 +1320,18 @@ int main(int argc, char** argv)
 
         free(code);           
     }
+
+#ifdef DEBUG
+    for (int i = 0; i < src_len; i++)
+    {
+        if(src_lines[i].operand != NULL)
+            printf(" Line num: %d\n Operand: %s \n Args: %s  Jump pos: %d\n\n",     \
+                    src_lines[i].line_number,                                       \
+                    src_lines[i].operand,                                           \
+                    src_lines[i].args,                                              \
+                    src_lines[i].code_begining_pos);                                
+    }    
+#endif
 
     return 0;
 }
