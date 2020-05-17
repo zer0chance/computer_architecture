@@ -86,7 +86,7 @@ struct __code_segment
 {
     uint8_t current_pos;
 
-    char variables[15];
+    char variables[30];
     uint8_t current_var_index; 
     char current_frame;   
 } code;
