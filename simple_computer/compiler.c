@@ -1,8 +1,8 @@
 #include <string.h>
-#include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <ctype.h>
+#include <stdio.h>
 
 #ifdef DEBUG
 #define DEBUG_ONLY(expr) expr
@@ -10,50 +10,10 @@
 #define DEBUG_ONLY(expr)
 #endif
 
+#define SRC_MAX_LINES       25
+#define SRC_LINE_MAX_LENGTH 40
+#define HEAP_MEMORY_OFFSET  70
 #define ERROR_MSG printf("\033[31;1merror: \033[0m");
-#define SRC_MAX_LINES 30
-#define SRC_LINE_MAX_LENGTH 50
-#define HEAP_MEMORY_OFFSET 70
-#define FRAME_BUFFER_OFFSET 90
-
-
-#define SET_LINE_NUMBER /*src_lines[i].code_begining_pos = line_num;*/  \
-    if (line_num < 10) {                                            \
-        result[code.current_pos++] = '0';                           \
-        sprintf(&(result[code.current_pos++]), "%d", line_num);     \
-    } else {                                                        \
-        sprintf(&(result[code.current_pos]), "%d", line_num);       \
-        code.current_pos += 2;                                      \
-    }                                                               
-
-
-#define POP_AND_CALCULATE switch (op[op_pos])           \
-    {                                                   \
-        case '+':                                       \
-            num[num_pos - 1] += num[num_pos];           \
-            num_pos--;                                  \
-            op_pos--;                                   \
-            break;                                      \
-        case '-':                                       \
-            num[num_pos - 1] -= num[num_pos];           \
-            num_pos--;                                  \
-            op_pos--;                                   \
-            break;                                      \
-        case '/':                                       \
-            num[num_pos - 1] /= num[num_pos];           \
-            num_pos--;                                  \
-            op_pos--;                                   \
-            break;                                      \
-        case '*':                                       \
-            num[num_pos - 1] *= num[num_pos];           \
-            num_pos--;                                  \
-            op_pos--;                                   \
-            break;                                      \
-        default:                                        \
-            ERROR_MSG                                   \
-            exit(0);                                    \
-    }                                                   
-
 
 #define CHECK_VARIABLE(var) if (strlen(var) > 2)                                                \
     {                                                                                           \
@@ -70,14 +30,64 @@
         return EXIT_FAILURE;                                                                    \
     }
 
+
+#define SET_LINE_NUMBER if (line_num >= 70) {                                   \
+        ERROR_MSG                                                               \
+        printf("%s: out of memory! Program is too large for this computer",     \
+                filename);                                                      \
+        return EXIT_FAILURE;                                                    \
+    } else if (line_num < 10) {                                                 \
+        result[code.current_pos++] = '0';                                       \
+        sprintf(&(result[code.current_pos++]), "%d", line_num);                 \
+    } else {                                                                    \
+        sprintf(&(result[code.current_pos]), "%d", line_num);                   \
+        code.current_pos += 2;                                                  \
+    }                                                               
+
+
+#define CHECK_VAR_INDEX if (code.current_var_index >= 30) {                     \
+        ERROR_MSG                                                               \
+        printf("%s: out of memory! Can't allocate more variables",              \
+                filename);                                                      \
+        return EXIT_FAILURE;                                                    \
+    } 
+
+
+#define POP_AND_CALCULATE switch (op[op_pos])                                   \
+    {                                                                           \
+        case '+':                                                               \
+            num[num_pos - 1] += num[num_pos];                                   \
+            num_pos--;                                                          \
+            op_pos--;                                                           \
+            break;                                                              \
+        case '-':                                                               \
+            num[num_pos - 1] -= num[num_pos];                                   \
+            num_pos--;                                                          \
+            op_pos--;                                                           \
+            break;                                                              \
+        case '/':                                                               \
+            num[num_pos - 1] /= num[num_pos];                                   \
+            num_pos--;                                                          \
+            op_pos--;                                                           \
+            break;                                                              \
+        case '*':                                                               \
+            num[num_pos - 1] *= num[num_pos];                                   \
+            num_pos--;                                                          \
+            op_pos--;                                                           \
+            break;                                                              \
+        default:                                                                \
+            ERROR_MSG                                                           \
+            printf("unknown operation: \033[1m%c\033[0m", op[op_pos]);          \
+            exit(0);                                                            \
+    }                                                   
+
+
 struct __code_segment
 {
     uint8_t current_pos;
 
-    char variables[20];
+    char variables[15];
     uint8_t current_var_index; 
-
-    char frames[10]; 
     char current_frame;   
 } code;
 
@@ -156,7 +166,14 @@ int parse_src(char* filename)
             error_flag = 1;
         }
 
-        line_num++;
+        if (line_num >= 70) {                                   
+            ERROR_MSG                                                               
+            printf("%s: out of memory! Program is too large for this computer", filename);  
+
+            return EXIT_FAILURE;  
+        } else {    
+            line_num++;
+        }    
     }
 
 
@@ -497,6 +514,7 @@ int compile(char* result, int src_len, char* filename)
 
             if (index == -1)   // Not initialized yet
             {
+                CHECK_VAR_INDEX
                 index = code.current_var_index;
                 code.variables[code.current_var_index++] = src_lines[i].args[0];
             }
@@ -580,6 +598,7 @@ int compile(char* result, int src_len, char* filename)
 
             if (index == -1)   // Not initialized yet
             {
+                CHECK_VAR_INDEX
                 index = code.current_var_index;
                 code.variables[code.current_var_index++] = variable_name[0];
             }
@@ -693,15 +712,16 @@ int compile(char* result, int src_len, char* filename)
 
                             default:
                                 ERROR_MSG
-                                printf("Oh shit man"); // ???????
-                                exit(0);
+                                printf("%s: line %d: unknown operation: \033[1m%c\033[0m",      \
+                                        filename, src_lines[i].line_number, expr_result[pos]);
+                                return EXIT_FAILURE;
                             }
                             line_num++;
                         
                             result[code.current_pos++] = '\n';
 
                             SET_LINE_NUMBER
-
+                            CHECK_VAR_INDEX
                             int new_index = code.current_var_index;
                             code.variables[code.current_var_index++] = code.current_frame++;
 
@@ -730,7 +750,7 @@ int compile(char* result, int src_len, char* filename)
                             result[code.current_pos++] = '\n';
 
                             SET_LINE_NUMBER
-
+                            CHECK_VAR_INDEX
                             int temp_index = code.current_var_index;
                             code.variables[code.current_var_index++] = code.current_frame++;
 
@@ -776,15 +796,16 @@ int compile(char* result, int src_len, char* filename)
 
                             default:
                                 ERROR_MSG
-                                printf("Oh shit man"); // ???????
-                                exit(0);
+                                printf("%s: line %d: unknown operation: \033[1m%c\033[0m",      \
+                                filename, src_lines[i].line_number, expr_result[pos]);
+                                return EXIT_FAILURE;
                             }
                             line_num++;
                         
                             result[code.current_pos++] = '\n';
 
                             SET_LINE_NUMBER
-
+                            CHECK_VAR_INDEX
                             int new_index = code.current_var_index;
                             code.variables[code.current_var_index++] = code.current_frame++;
 
@@ -846,7 +867,7 @@ int compile(char* result, int src_len, char* filename)
                             result[code.current_pos++] = '\n';
 
                             SET_LINE_NUMBER
-
+                            CHECK_VAR_INDEX
                             int new_index = code.current_var_index;
                             code.variables[code.current_var_index++] = code.current_frame++;
 
@@ -893,7 +914,7 @@ int compile(char* result, int src_len, char* filename)
                             result[code.current_pos++] = '\n';
 
                             SET_LINE_NUMBER
-
+                            CHECK_VAR_INDEX
                             int new_index = code.current_var_index;
                             code.variables[code.current_var_index++] = code.current_frame++;
 
