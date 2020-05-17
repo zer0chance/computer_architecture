@@ -1,4 +1,3 @@
-#include "share.h"
 #include "myReadkey.h"
 #include "myBigChars.h"
 #include "myTerm.h"
@@ -12,10 +11,11 @@ struct itimerval nval, oval;
 
 void print_selected()
 {
-    if(RAM[selected_pos] & TWO_POW_FIFTEEN)
-        bc_printbigchar(bc_chars[MINUS], 17, 3, 0, 0);
-    else
+    if(RAM[selected_pos] & TWO_POW_FOURTEEN)
         bc_printbigchar(bc_chars[PLUS], 17, 3, 0, 0);
+    else
+        bc_printbigchar(bc_chars[MINUS], 17, 3, 0, 0);
+
 
     uint16_t comand_num, operand;  
     sc_commandDecode(RAM[selected_pos], &comand_num, &operand);
@@ -77,13 +77,13 @@ void print_memory()
             if (mpos_x == x && mpos_y == y)
             {
                 mt_setbgcolor(BG_BLUE);
-                selected_pos = 10 * i + j;
+                selected_pos = 10 * i + j; 
             }
 
-            if(RAM[k] & 16384)
-                printf("-");
-            else
+            if(RAM[k] & TWO_POW_FOURTEEN)
                 printf("+");
+            else
+                printf("-");
                 
             sc_commandDecode(RAM[k], &comand_num, &operand);
 
@@ -142,7 +142,7 @@ void print_term()
     mt_gotoXY(10, 70);
     printf("Operation");
     mt_gotoXY(11, 70);
-    if(RAM[IC] & TWO_POW_FIFTEEN)
+    if(RAM[IC] & TWO_POW_FOURTEEN)
         printf("+");
     else
         printf("-");
@@ -176,7 +176,7 @@ void print_term()
     printf("F6 - inctructionCounter");
 
     mt_gotoXY(26, 3); 
-    printf("Input/Output:");
+    printf("\033[1mInput/Output:\033[0m");
 
     if (input_x > 37) clear_input();
     mt_gotoXY(input_x, input_y);
@@ -706,7 +706,11 @@ int main()
             printf("Save to file: ");
 
             scanf("%s", filename);
-            sc_memorySave(filename);      
+            if(sc_memorySave(filename))
+            {
+                mt_gotoXY(input_x++, input_y);
+                printf("Can`t open file: %s", filename);
+            }      
         }
 
 
@@ -722,7 +726,11 @@ int main()
             printf("Load file: ");
 
             scanf("%s", filename);
-            sc_memoryLoad(filename);
+            if(sc_memoryLoad(filename))
+            {
+                mt_gotoXY(input_x++, input_y);
+                printf("Can`t open file: %s", filename);
+            }
 
             rk_mytermregime(OFF, 0, 1, OFF, OFF);
         }

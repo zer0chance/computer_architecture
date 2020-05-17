@@ -2,7 +2,7 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#define TWO_POW_FIFTEEN 16384
+#define TWO_POW_FOURTEEN 0x4000
 
 int input_x = 27;
 int input_y = 3;

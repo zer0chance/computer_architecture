@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "share.h"
 
 #define RAM_MAX_SIZE 100
-#define COMMAND 0x8000      // 1 0 0000000 0000000
-#define COMMAND_NUM 0x3f80  //     1111111 0000000 
-#define OPERAND 0x7f        //             1111111
+#define COMMAND      0x4000   // 0 1 0000000 0000000
+#define COMMAND_NUM  0x3f80   //     1111111 0000000 
+#define OPERAND      0x7f     //             1111111
 
 uint8_t FLAGS;
 int16_t RAM[RAM_MAX_SIZE];
@@ -32,13 +33,13 @@ int sc_memorySet(uint16_t adress, int value)
 {
     if (adress >= RAM_MAX_SIZE) 
     {
-	FLAGS |= MEM_OUT_OF_BOUND;
-	return EXIT_FAILURE;
+        FLAGS |= MEM_OUT_OF_BOUND;
+        return EXIT_FAILURE;
     } 
     else 
     {
-	RAM[adress] = value;
-	return EXIT_SUCCESS;
+        RAM[adress] = value;
+        return EXIT_SUCCESS;
     }
 }    
 
@@ -47,13 +48,13 @@ int sc_memoryGet(uint16_t adress, int* value)
 {
     if (adress >= RAM_MAX_SIZE) 
     {
-	FLAGS |= MEM_OUT_OF_BOUND;
-	return EXIT_FAILURE;
+        FLAGS |= MEM_OUT_OF_BOUND;
+        return EXIT_FAILURE;
     } 
     else 
     {
-	*value = RAM[adress];
-	return EXIT_SUCCESS;
+        *value = RAM[adress];
+        return EXIT_SUCCESS;
     }
 }    
 
@@ -64,13 +65,12 @@ int sc_memorySave(char* filename)
     file = fopen(filename, "wb");
     if (file == NULL)
     {
-	printf("Can`t open file");
         return EXIT_FAILURE;
     }
     else 
     {    
         fwrite(RAM, sizeof(RAM), 1, file);
-	return EXIT_SUCCESS;
+	    return EXIT_SUCCESS;
     }
 }
 
@@ -81,13 +81,12 @@ int sc_memoryLoad(char* filename)
     file = fopen(filename, "rb");
     if (file == NULL)
     {
-	printf("Can`t open file");
         return EXIT_FAILURE;
     }
     else 
     {    
         fread(RAM, sizeof(RAM), 1, file);
-	return EXIT_SUCCESS;
+	    return EXIT_SUCCESS;
     }
 }
 
@@ -171,14 +170,14 @@ int sc_regGet(int reg, int* value)
 }
 
 
-int sc_commandEncode(uint16_t command_num, uint16_t operand, int16_t* value) // TODO: handle exeptions
+int sc_commandEncode(uint16_t command_num, uint16_t operand, int16_t* value)
 {
     *value = (COMMAND | (command_num << 7)) | operand;
     return EXIT_SUCCESS;
 }
 
 
-int sc_commandDecode(int16_t value, uint16_t* command_num, uint16_t* operand) // TODO: handle exeptions
+int sc_commandDecode(int16_t value, uint16_t* command_num, uint16_t* operand)
 {
     *command_num = (value & COMMAND_NUM) >> 7;
     *operand = value & OPERAND;

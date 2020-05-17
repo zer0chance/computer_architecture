@@ -905,7 +905,7 @@ int compile(char* result, int src_len, char* filename)
                             pos = 0;
                         }    
                     }
-                       
+
                     if (strlen(expr_result) > 2)
                     {
                         ERROR_MSG
@@ -1280,6 +1280,17 @@ int main(int argc, char** argv)
 
     int src_len = parse_src(filename);
 
+#ifdef DEBUG
+    for (int i = 0; i < src_len; i++)
+    {
+        if(src_lines[i].operand != NULL)
+            printf(" Line num: %d\n Operand: %s \n Args: %s\n",     \
+                    src_lines[i].line_number,                       \
+                    src_lines[i].operand,                           \
+                    src_lines[i].args);                                            
+    }    
+#endif   
+
     if(src_len < 0) {
         printf("\nCompilation: \033[31;1mfailed\033[0m\nexit code: %d\n", src_len);
         return 0;
@@ -1320,18 +1331,6 @@ int main(int argc, char** argv)
 
         free(code);           
     }
-
-#ifdef DEBUG
-    for (int i = 0; i < src_len; i++)
-    {
-        if(src_lines[i].operand != NULL)
-            printf(" Line num: %d\n Operand: %s \n Args: %s  Jump pos: %d\n\n",     \
-                    src_lines[i].line_number,                                       \
-                    src_lines[i].operand,                                           \
-                    src_lines[i].args,                                              \
-                    src_lines[i].code_begining_pos);                                
-    }    
-#endif
 
     return 0;
 }
