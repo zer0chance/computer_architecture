@@ -444,7 +444,7 @@ int polish_revert_notation(char* expr, char* result)
     }
     
     result[res_pos] = '\0';
-    printf("Polish notation: %s\n", result);
+    DEBUG_ONLY(printf("\nPolish notation: %s\n", result);)
     return EXIT_SUCCESS;
 }
 
@@ -476,7 +476,7 @@ void update_result(char* res, int pos)
     strcpy(res, tmp);
 
     free(tmp);
-    DEBUG_ONLY(printf("\nBecome: %s\n\n", res);)
+    DEBUG_ONLY(printf("\nBecome: %s\n", res);)
 }
 
 
