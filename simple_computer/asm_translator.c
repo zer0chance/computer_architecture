@@ -160,7 +160,31 @@ int interpreter(char* filename)
 
 int main(int argc, char** argv)
 {
-    char* filename = argv[1]; 
+    char* filename; 
+    char* result_name; 
+
+    if (argc == 1) 
+    {
+        ERROR_MSG 
+        printf("you need to pass source file name by the first argument\n");
+        return 0;
+    } 
+    else if (argc == 2)
+    {
+        filename = argv[1]; 
+        result_name = argv[1]; 
+    }
+    else if (argc == 3)
+    {
+        filename = argv[1]; 
+        result_name = argv[2]; 
+    }
+    else 
+    {
+        ERROR_MSG
+        printf("invalid arguments\n");
+        return 0;
+    } 
     
     sc_memoryInit();
     if(interpreter(filename))
@@ -170,7 +194,7 @@ int main(int argc, char** argv)
     else
     {
         printf("\nTranslation: \033[32;1msuccess\033[0m\nexit code: 0\n");
-        char* file = strtok(filename, ".");
+        char* file = strtok(result_name, ".");
         strcat(file, ".o");
         if(sc_memorySave(file))
             printf("\nfailed to create object file %s", file);
